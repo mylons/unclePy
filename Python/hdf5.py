@@ -132,6 +132,61 @@ class HDF5:
 
         return inten_meas[:, 1]
 
+    def sls_tms(self, well):
+        """
+        Parameters
+        ----------
+        well : str
+            Single well name, e.g. 'A1'
+
+        Returns
+        -------
+        np.array
+            All TM values for single well
+
+        Examples
+        -------
+            np.array([42.48, 82.4 ,  0.  ,  0.  ])
+        """
+        well_num = well_name_to_num(well)
+        tms = self.file['Application1']['Run1'][well_num] \
+            ['Fluor_SLS_Data']['Analysis']['Tms'][0]
+        return tms
+
+    def sls_tonset(self, well):
+        """
+        Parameters
+        ----------
+        well : str
+            Single well name, e.g. 'A1'
+
+        Returns
+        -------
+        float
+            Tonset value for single well
+        """
+        well_num = well_name_to_num(well)
+        tonset = self.file['Application1']['Run1'][well_num] \
+            ['Fluor_SLS_Data']['Analysis']['TonsetBCM'][0]
+        return tonset
+
+    def sls_tagg266(self, well):
+        """
+        Parameters
+        ----------
+        well : str
+            Single well name, e.g. 'A1'
+
+        Returns
+        -------
+        float
+            Tagg266 for single well
+        """
+        well_num = well_name_to_num(well)
+        tagg266 = self.file['Application1']['Run1'][well_num] \
+            ['Fluor_SLS_Data']['Analysis']['Tagg266'][0]
+        return tagg266
+
     def sls_spec_well(self, well):
         """
         Parameters
@@ -158,8 +213,25 @@ class HDF5:
         df = pd.DataFrame(inten).T
         df.columns = cols
         df.index = waves
+        df.index.name = 'Wavelength'
 
         return df
+
+    def write_sls_spec_excel(self, save_path):
+        """
+        Parameters
+        ----------
+        save_path
+
+        Returns
+        -------
+        None
+        """
+        wells = self.wells()
+        with pd.ExcelWriter(save_path) as writer:
+            for well in wells:
+                df = self.sls_spec_well(well)
+                df.to_excel(writer, sheet_name=well)
 
 
 def well_name_to_num(well):
