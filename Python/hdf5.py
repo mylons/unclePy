@@ -98,8 +98,7 @@ class HDF5:
         """
         well_num = well_name_to_num(well)
         wavelengths = self.file['Application1']['Run1'][well_num] \
-            ['Fluor_SLS_Data']['CorrectedSpectra'] \
-            ['0001'][:, 0]
+                          ['Fluor_SLS_Data']['CorrectedSpectra']['0001'][:, 0]
         return wavelengths
 
     def sls_intensity(self, well, temp):
@@ -199,7 +198,6 @@ class HDF5:
         pd.DataFrame
             Full dataframe of SLS intensities for single well
             This is comparable to an Excel tab for one well, e.g. 'A1'
-
         """
         temps = self.sls_temperatures(well)
         times = self.sls_times(well)
@@ -244,7 +242,7 @@ def well_name_to_num(well):
     Returns
     -------
     string
-        Well number
+        Well number, e.g. 'Well_01'
     """
     well_num = string.ascii_uppercase.index(well[0]) + 1
     well_num = f'Well_{well_num:02}'
@@ -252,3 +250,4 @@ def well_name_to_num(well):
 
 
 h = HDF5('/Users/jmiller/Desktop/UNcle Files/uni files/210602-01-Seq1 Cas9-pH003R.uni')
+save_path = '/Users/jmiller/Desktop/UNcle Files/Misc/uncle_out.xlsx'
