@@ -432,7 +432,7 @@ class HDF5:
         with pd.ExcelWriter(save_path) as writer:
             for well in wells:
                 df = self.sls_export(well)
-                df.to_excel(writer, sheet_name = well)
+                df.to_excel(writer, sheet_name = well, index = False)
 
 
 def well_name_to_num(well):
