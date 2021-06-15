@@ -131,6 +131,21 @@ class HDF5:
 
         return inten_meas[:, 1]
 
+    def sls_color(self, well):
+        """
+        TODO: color is currently blank for all files. Is there ever a value?
+
+        Parameters
+        ----------
+        well : str
+            Single well name, e.g. 'A1'
+
+        Returns
+        -------
+        None (because currently not used)
+        """
+        return np.nan
+
     def sls_tms(self, well):
         """
         Parameters
@@ -186,6 +201,23 @@ class HDF5:
             ['Fluor_SLS_Data']['Analysis']['Tagg266'][0]
         return tagg266
 
+    def sls_tagg473(self, well):
+        """
+        Parameters
+        ----------
+        well : str
+            Single well name, e.g. 'A1'
+
+        Returns
+        -------
+        float
+            Tagg473 for single well
+        """
+        well_num = well_name_to_num(well)
+        tagg473 = self.file['Application1']['Run1'][well_num] \
+            ['Fluor_SLS_Data']['Analysis']['Tagg473'][0]
+        return tagg473
+
     def sls_spec_well(self, well):
         """
         Parameters
@@ -215,11 +247,54 @@ class HDF5:
 
         return df
 
+    def sls_sum(self):
+        """
+
+        Returns
+        -------
+
+        """
+        wells = self.wells()
+        samples = self.samples()
+
+        cols = ['Color', 'Well', 'Sample', 'Tonset (°C)', 'Tagg 266 (°C)',
+                'Tagg 473 (°C)']
+        # Determine how many Tm columns
+        tm_cols = []
+        for i in self.wells():
+            tm_cols = np.append(tm_cols, np.flatnonzero(self.sls_tms(i)))
+        max_tm = int(np.max(tm_cols) + 1)
+        cols.extend(['Tm{} (°C)'.format(i + 1) for i in
+                     range(max_tm)])
+
+        df = pd.DataFrame(columns = cols)
+
+        for i in wells:
+            well_sum = {'Color': self.sls_color(i),
+                        'Well': i,
+                        'Tonset (°C)': self.sls_tonset(i),
+                        'Tagg 266 (°C)': self.sls_tagg266(i),
+                        'Tagg 473 (°C)': self.sls_tagg473(i)}
+
+            sample_index = np.flatnonzero(
+                np.char.find(self.samples(), i) != -1)
+            well_sum['Sample'] = samples[sample_index][0]
+
+            tms = self.sls_tms(i)
+            for j in range(max_tm):
+                well_sum['Tm{} (°C)'.format(j + 1)] = \
+                    tms[j] if tms[j] != 0 else np.nan
+
+            df = df.append(well_sum, ignore_index = True)
+
+        return df
+
     def write_sls_spec_excel(self, save_path):
         """
         Parameters
         ----------
         save_path
+            Directory to save Excel file to
 
         Returns
         -------
@@ -229,7 +304,21 @@ class HDF5:
         with pd.ExcelWriter(save_path) as writer:
             for well in wells:
                 df = self.sls_spec_well(well)
-                df.to_excel(writer, sheet_name=well)
+                df.to_excel(writer, sheet_name = well)
+
+    def write_sls_sum_excel(self, save_path):
+        """
+        Parameters
+        ----------
+        save_path
+            Directory to save Excel file to
+
+        Returns
+        -------
+        None
+        """
+        df = self.sls_sum()
+        df.to_excel(save_path, index = False)
 
 
 def well_name_to_num(well):
