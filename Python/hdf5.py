@@ -249,10 +249,10 @@ class HDF5:
 
     def sls_sum(self):
         """
-
         Returns
         -------
-
+        pd.DataFrame
+            Full dataframe for SLS Summary
         """
         wells = self.wells()
         samples = self.samples()
