@@ -8,6 +8,9 @@ class HDF5:
     def __init__(self, file_path):
         self.file = h5py.File(file_path, 'r')
 
+    # ----------------------------------------------------------------------- #
+    # BASIC DATA COLLECTION                                                   #
+    # ----------------------------------------------------------------------- #
     def wells(self):
         """
         Returns
@@ -84,6 +87,9 @@ class HDF5:
                               meas_dir[i].attrs['Actual Time'])
         return times
 
+    # ----------------------------------------------------------------------- #
+    # DATA COLLECTION FOR SLS SPEC                                            #
+    # ----------------------------------------------------------------------- #
     def sls_wavelengths(self, well):
         """
         Parameters
@@ -131,6 +137,9 @@ class HDF5:
 
         return inten_meas[:, 1]
 
+    # ----------------------------------------------------------------------- #
+    # DATA COLLECTION FOR SLS SUMMARY                                         #
+    # ----------------------------------------------------------------------- #
     def sls_color(self, well):
         """
         TODO: color is currently blank for all files. Is there ever a value?
