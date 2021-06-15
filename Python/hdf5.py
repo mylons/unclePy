@@ -227,6 +227,63 @@ class HDF5:
             ['Fluor_SLS_Data']['Analysis']['Tagg473'][0]
         return tagg473
 
+    # ----------------------------------------------------------------------- #
+    # DATA COLLECTION FOR SLS EXPORT                                          #
+    # ----------------------------------------------------------------------- #
+    def sls_bcm(self, well):
+        """
+        Parameters
+        ----------
+        well : str
+            Single well name, e.g. 'A1'
+
+        Returns
+        -------
+        np.array
+            BCM/nm for single well
+        """
+        well_num = well_name_to_num(well)
+        bcm = self.file['Application1']['Run1'][well_num] \
+            ['Fluor_SLS_Data']['Analysis']['BCM'][:]
+        return bcm
+
+    def sls_266(self, well):
+        """
+        Parameters
+        ----------
+        well : str
+            Single well name, e.g. 'A1'
+
+        Returns
+        -------
+        np.array
+            SLS 266 nm/Count for single well
+        """
+        well_num = well_name_to_num(well)
+        sls_266 = self.file['Application1']['Run1'][well_num] \
+            ['Fluor_SLS_Data']['Analysis']['SLS266'][:]
+        return sls_266
+
+    def sls_473(self, well):
+        """
+        Parameters
+        ----------
+        well : str
+            Single well name, e.g. 'A1'
+
+        Returns
+        -------
+        np.array
+            SLS 473 nm/Count for single well
+        """
+        well_num = well_name_to_num(well)
+        sls_473 = self.file['Application1']['Run1'][well_num] \
+            ['Fluor_SLS_Data']['Analysis']['SLS473'][:]
+        return sls_473
+
+    # ----------------------------------------------------------------------- #
+    # DATAFRAME ASSEMBLY                                                      #
+    # ----------------------------------------------------------------------- #
     def sls_spec_well(self, well):
         """
         Parameters
@@ -246,10 +303,10 @@ class HDF5:
         inten = [pd.Series(self.sls_intensity(well, temp)) for temp in temps]
 
         cols = [f'Temp :{temps[i]:02f}, Time:{times[i]:.1f}'
-                for i in range(len(temps))]
+                for i in range(len(temps))]  # formatting matches file
 
         # Transpose due to the way dataframe is compiled
-        df = pd.DataFrame(inten).T
+        df = pd.DataFrame(data = inten).T
         df.columns = cols
         df.index = waves
         df.index.name = 'Wavelength'
@@ -298,6 +355,37 @@ class HDF5:
 
         return df
 
+    def sls_export(self, well):
+        """
+        Parameters
+        ----------
+        well : str
+            Single well name, e.g. 'A1'
+
+        Returns
+        -------
+        pd.DataFrame
+            Full dataframe of BCM/nm, SLS 266 nm/Count, SLS 473 nm/Count
+                for single well
+            This is comparable to an Excel tab for one well, e.g. 'A1'
+        """
+        temps = self.sls_temperatures(well)
+        bcm = self.sls_bcm(well)
+        sls_266 = self.sls_266(well)
+        sls_473 = self.sls_473(well)
+
+        cols = ['Temperature', 'BCM / nm', 'Temperature', 'SLS 266 nm/Count',
+                'Temperature', 'SLS 473  nm/Count']  # formatting matches file
+
+        df = pd.DataFrame(data = [temps, bcm, temps, sls_266,
+                                  temps, sls_473]).T
+        df.columns = cols
+
+        return df
+
+    # ----------------------------------------------------------------------- #
+    # WRITE DATA TO EXCEL                                                     #
+    # ----------------------------------------------------------------------- #
     def write_sls_spec_excel(self, save_path):
         """
         Parameters
@@ -328,6 +416,23 @@ class HDF5:
         """
         df = self.sls_sum()
         df.to_excel(save_path, index = False)
+
+    def write_sls_export_excel(self, save_path):
+        """
+        Parameters
+        ----------
+        save_path
+            Directory to save Excel file to
+
+        Returns
+        -------
+        None
+        """
+        wells = self.wells()
+        with pd.ExcelWriter(save_path) as writer:
+            for well in wells:
+                df = self.sls_export(well)
+                df.to_excel(writer, sheet_name = well)
 
 
 def well_name_to_num(well):
