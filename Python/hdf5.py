@@ -27,6 +27,22 @@ class HDF5:
             wells = np.append(wells, i[0].decode('utf-8'))
         return wells
 
+    def well_name_to_num(self, well):
+        """
+        Parameters
+        ----------
+        well : str
+            Single well name, e.g. 'A1'
+
+        Returns
+        -------
+        string
+            Well number, e.g. 'Well_01'
+        """
+        well_num = np.argwhere(self.wells() == well)[0][0] + 1
+        well_num = f'Well_{well_num:02}'
+        return well_num
+
     def samples(self):
         """
         Returns
@@ -55,7 +71,7 @@ class HDF5:
         np.array
             Temperatures used in SLS analysis for single well
         """
-        well_num = well_name_to_num(well)
+        well_num = self.well_name_to_num(well)
         meas_dir = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['CorrectedSpectra']
 
@@ -77,7 +93,7 @@ class HDF5:
         np.array
             Times used in SLS analysis for single well
         """
-        well_num = well_name_to_num(well)
+        well_num = self.well_name_to_num(well)
         meas_dir = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['CorrectedSpectra']
 
@@ -102,7 +118,7 @@ class HDF5:
         np.array
             Wavelengths used in SLS analysis for single well
         """
-        well_num = well_name_to_num(well)
+        well_num = self.well_name_to_num(well)
         wavelengths = self.file['Application1']['Run1'][well_num] \
                           ['Fluor_SLS_Data']['CorrectedSpectra']['0001'][:, 0]
         return wavelengths
@@ -122,7 +138,7 @@ class HDF5:
         np.array
             Intensities for a single temp of single well
         """
-        well_num = well_name_to_num(well)
+        well_num = self.well_name_to_num(well)
         temps = self.sls_temperatures(well)
         # Cannot index into HDF5 dataset, therefore need to call with dict key
         index = np.flatnonzero(temps == temp)[0]
@@ -171,7 +187,7 @@ class HDF5:
         -------
             np.array([42.48, 82.4 ,  0.  ,  0.  ])
         """
-        well_num = well_name_to_num(well)
+        well_num = self.well_name_to_num(well)
         tms = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['Tms'][0]
         return tms
@@ -188,7 +204,7 @@ class HDF5:
         float
             Tonset value for single well
         """
-        well_num = well_name_to_num(well)
+        well_num = self.well_name_to_num(well)
         tonset = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['TonsetBCM'][0]
         tonset = verify(tonset)
@@ -206,7 +222,7 @@ class HDF5:
         float
             Tagg266 for single well
         """
-        well_num = well_name_to_num(well)
+        well_num = self.well_name_to_num(well)
         tagg266 = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['Tagg266'][0]
         tagg266 = verify(tagg266)
@@ -224,7 +240,7 @@ class HDF5:
         float
             Tagg473 for single well
         """
-        well_num = well_name_to_num(well)
+        well_num = self.well_name_to_num(well)
         tagg473 = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['Tagg473'][0]
         tagg473 = verify(tagg473)
@@ -245,7 +261,7 @@ class HDF5:
         np.array
             BCM/nm for single well
         """
-        well_num = well_name_to_num(well)
+        well_num = self.well_name_to_num(well)
         bcm = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['BCM'][:]
         return bcm
@@ -262,7 +278,7 @@ class HDF5:
         np.array
             SLS 266 nm/Count for single well
         """
-        well_num = well_name_to_num(well)
+        well_num = self.well_name_to_num(well)
         sls_266 = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['SLS266'][:]
         return sls_266
@@ -279,7 +295,7 @@ class HDF5:
         np.array
             SLS 473 nm/Count for single well
         """
-        well_num = well_name_to_num(well)
+        well_num = self.well_name_to_num(well)
         sls_473 = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['SLS473'][:]
         return sls_473
@@ -436,23 +452,6 @@ class HDF5:
             for well in wells:
                 df = self.sls_export(well)
                 df.to_excel(writer, sheet_name = well, index = False)
-
-
-def well_name_to_num(well):
-    """
-    Parameters
-    ----------
-    well : str
-        Single well name, e.g. 'A1'
-
-    Returns
-    -------
-    string
-        Well number, e.g. 'Well_01'
-    """
-    well_num = string.ascii_uppercase.index(well[0]) + 1
-    well_num = f'Well_{well_num:02}'
-    return well_num
 
 
 def verify(value):
