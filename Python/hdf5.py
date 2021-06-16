@@ -191,6 +191,7 @@ class HDF5:
         well_num = well_name_to_num(well)
         tonset = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['TonsetBCM'][0]
+        tonset = verify(tonset)
         return tonset
 
     def sls_tagg266(self, well):
@@ -208,6 +209,7 @@ class HDF5:
         well_num = well_name_to_num(well)
         tagg266 = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['Tagg266'][0]
+        tagg266 = verify(tagg266)
         return tagg266
 
     def sls_tagg473(self, well):
@@ -225,6 +227,7 @@ class HDF5:
         well_num = well_name_to_num(well)
         tagg473 = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['Tagg473'][0]
+        tagg473 = verify(tagg473)
         return tagg473
 
     # ----------------------------------------------------------------------- #
@@ -450,6 +453,22 @@ def well_name_to_num(well):
     well_num = string.ascii_uppercase.index(well[0]) + 1
     well_num = f'Well_{well_num:02}'
     return well_num
+
+
+def verify(value):
+    """
+    Parameters
+    ----------
+    value
+
+    Returns
+    -------
+
+    """
+    if value != -1:
+        return value
+    else:
+        return np.nan
 
 
 h = HDF5('/Users/jmiller/Desktop/UNcle Files/uni files/210602-01-Seq1 Cas9-pH003R.uni')
