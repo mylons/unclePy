@@ -1,7 +1,6 @@
 import h5py
 import pandas as pd
 import numpy as np
-import string
 
 
 class HDF5:
@@ -409,7 +408,7 @@ class HDF5:
         """
         Parameters
         ----------
-        save_path
+        save_path : str
             Directory to save Excel file to
 
         Returns
@@ -426,7 +425,7 @@ class HDF5:
         """
         Parameters
         ----------
-        save_path
+        save_path : str
             Directory to save Excel file to
 
         Returns
@@ -440,7 +439,7 @@ class HDF5:
         """
         Parameters
         ----------
-        save_path
+        save_path : str
             Directory to save Excel file to
 
         Returns
@@ -458,10 +457,14 @@ def verify(value):
     """
     Parameters
     ----------
-    value
+    value : int, float
+        Any value to verify is legitimate
 
     Returns
     -------
+    int, float, np.nan
+        Depends on input value
+        Returns input value if valid, otherwise np.nan
 
     """
     if value != -1:
