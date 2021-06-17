@@ -3,6 +3,27 @@ import numpy as np
 
 
 class HDF5:
+    """
+    Generic class to load .uni (HDF5) files
+
+    Attributes
+    ----------
+    file_path : str
+        .uni (HDF5) file to load
+
+    Methods
+    -------
+    wells()
+        Returns names of wells used in experiment
+
+    well_name_to_num(well)
+        Returns well number converted from input well name
+        Example: 'A1' -> 'Well_01'
+
+    samples()
+        Returns sample names/descriptions
+
+    """
     def __init__(self, file_path):
         self.file = h5py.File(file_path, 'r')
 
@@ -17,7 +38,7 @@ class HDF5:
             Well names
 
         Examples
-        -------
+        --------
         np.array(['A1', 'B1', ...])
         """
         wells = []
@@ -49,7 +70,7 @@ class HDF5:
             Sample names
 
         Examples
-        -------
+        --------
         np.array(['0.1 mg/ml Uni A1', '0.1 mg/ml Uni B1', ...])
         """
         samples = []
