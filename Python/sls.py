@@ -52,6 +52,10 @@ class SLS(HDF5):
     write_sls_export_excel(save_path)
         Saves BCM/nm, SLS 266 nm/Count, SLS 473 nm/Count (at temperature) file
     """
+
+    # ----------------------------------------------------------------------- #
+    # GENERIC DATA COLLECTION                                                 #
+    # ----------------------------------------------------------------------- #
     def sls_temperatures(self, well):
         """
         Parameters

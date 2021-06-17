@@ -28,7 +28,7 @@ class HDF5:
         self.file = h5py.File(file_path, 'r')
 
     # ----------------------------------------------------------------------- #
-    # BASIC DATA COLLECTION                                                   #
+    # GENERIC DATA COLLECTION                                                 #
     # ----------------------------------------------------------------------- #
     def wells(self):
         """
