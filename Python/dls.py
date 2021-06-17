@@ -1,5 +1,6 @@
 from hdf5 import HDF5
 import pandas as pd
+import numpy as np
 
 
 class DLS(HDF5):
@@ -14,12 +15,16 @@ class DLS(HDF5):
     -------
 
     """
+
     def __init__(self, file_path):
         super().__init__(file_path)
         # Hydrodynamic diameter is consistently 2x values found in .uni file
-        # Is this possibly because values are radii and Excel is diameter?
+        # Is this possibly because values are radii and export is diameter?
         self.factor = 2
 
+    # ----------------------------------------------------------------------- #
+    # DATA COLLECTION FOR DLS BUNDLE                                          #
+    # ----------------------------------------------------------------------- #
     def dls_intensity(self, well):
         """
         Parameters
@@ -59,7 +64,7 @@ class DLS(HDF5):
             ['Mass']['Data'][:]
         mass[:, 0] *= self.factor
         df = pd.DataFrame(mass, columns = ['Hydrodynamic Diameter (nm)',
-                                            'Amplitude'])
+                                           'Amplitude'])
         return df
 
     def dls_correlation(self, well):
@@ -72,7 +77,7 @@ class DLS(HDF5):
         Returns
         -------
         np.array
-            Correlation time(s) and amplitude for a single well
+            Correlation time(sec) and amplitude for a single well
         """
         well_num = self.well_name_to_num(well)
         corr = self.file['Application1']['Run1'][well_num]['DLS_Data'] \
@@ -84,7 +89,213 @@ class DLS(HDF5):
         return df
 
     # ----------------------------------------------------------------------- #
-    # WRITE DATA TO EXCEL                                                     #
+    # DATA COLLECTION FOR DLS SUMMARY                                         #
+    # ----------------------------------------------------------------------- #
+    def dls_sum_color(self, well):
+        """
+        TODO: color is currently blank for all files. Is there ever a value?
+
+        Parameters
+        ----------
+        well : str
+            Single well name, e.g. 'A1'
+
+        Returns
+        -------
+        None (because currently not used)
+        """
+        return np.nan
+
+    def dls_sum_temperatures(self):
+        """
+        Returns
+        -------
+
+        """
+        wells = self.wells()
+        temps = []
+        for well in wells:
+            well_num = self.well_name_to_num(well)
+            temps = np.append(temps,
+                              self.file['Application1']['Run1'][well_num]
+                              ['DLS_Data']['DLS0001']
+                              ['ExperimentAveraged']['AverageCorrelation'].
+                              attrs['Temperature'])
+        return temps
+
+    def dls_sum_zave_diam(self):
+        """
+
+        Returns
+        -------
+
+        """
+        wells = self.wells()
+        diams = []
+        for well in wells:
+            well_num = self.well_name_to_num(well)
+            radius = self.file['Application1']['Run1'][well_num] \
+                ['DLS_Data']['DLS0001'] \
+                ['ExperimentAveraged']['AverageCorrelation'] \
+                .attrs['Radius']
+            diam = radius * self.factor
+            if diam > 1000:
+                diam = '>1000'
+            diams = np.append(diams, diam)
+        return diams
+
+    def dls_sum_zave_diff_coeff(self):
+        """
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def dls_sum_sd_diam(self):
+        """
+
+        Returns
+        -------
+
+        """
+        wells = self.wells()
+        diams = []
+        for well in wells:
+            well_num = self.well_name_to_num(well)
+            radius = self.file['Application1']['Run1'][well_num] \
+                ['DLS_Data']['DLS0001'] \
+                ['ExperimentAveraged']['AverageCorrelation'] \
+                .attrs['StdDev']
+            diam = radius * self.factor
+            if diam > 1000:
+                diam = '>1000'
+            diams = np.append(diams, diam)
+        return diams
+
+    def dls_sum_pdi(self):
+        """
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def dls_sum_fit_var(self):
+        """
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def dls_sum_intensity(self):
+        """
+
+        Returns
+        -------
+
+        """
+        wells = self.wells()
+        inten = []
+        for well in wells:
+            well_num = self.well_name_to_num(well)
+            inten = np.append(inten,
+                              self.file['Application1']['Run1'][well_num]
+                              ['DLS_Data']['DLS0001']
+                              ['ExperimentAveraged']['AverageCorrelation'].
+                              attrs['AverageIntensity'])
+        return inten
+
+    def dls_sum_pk_mode_diam(self):
+        # TODO can you iterate over all PK here?
+        """
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def dls_sum_pk_est_mw(self):
+        # TODO can you iterate over all PK here?
+        """
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def dls_sum_pk_poly(self):
+        # TODO can you iterate over all PK here?
+        """
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def dls_sum_data_filter(self):
+        """
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def dls_sum_viscosity(self):
+        """
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def dls_sum_ri(self):
+        """
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def dls_sum_der_intensity(self):
+        """
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def dls_sum_min_pk_area(self):
+        """
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def dls_sum_min_rh(self):
+        """
+
+        Returns
+        -------
+
+        """
+        pass
+
+    # ----------------------------------------------------------------------- #
+    # WRITE DATA TO CSV                                                       #
     # ----------------------------------------------------------------------- #
     def write_dls_bundle_csv(self, save_directory):
         """
