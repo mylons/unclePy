@@ -445,3 +445,7 @@ class SLS(HDF5):
             for well in wells:
                 df = self.sls_export(well)
                 df.to_excel(writer, sheet_name = well, index = False)
+
+
+h5 = SLS('/Users/jmiller/Desktop/UNcle Files/uni files/210602-01-Seq1 Cas9-pH003R.uni')
+h6 = SLS('/Users/jmiller/Desktop/UNcle Files/uni files/Gen6 uni 1,2,3.uni')
