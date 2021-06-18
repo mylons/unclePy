@@ -247,7 +247,15 @@ class DLS(HDF5):
         -------
 
         """
-        pass
+        wells = self.wells()
+        dataf = []
+        for well in wells:
+            well_num = self.well_name_to_num(well)
+            dataf = np.append(dataf,
+                              self.file['Application1']['Run1'][well_num]
+                              ['DLS_Data'].attrs['Data Filter Name'].
+                              decode('utf-8'))
+        return dataf
 
     def dls_sum_viscosity(self):
         """
@@ -256,7 +264,14 @@ class DLS(HDF5):
         -------
 
         """
-        pass
+        wells = self.wells()
+        visco = []
+        for well in wells:
+            well_num = self.well_name_to_num(well)
+            visco = np.append(visco,
+                              self.file['Application1']['Run1'][well_num]
+                              ['DLS_Data']['DLS0001'].attrs['Viscosity'])
+        return visco
 
     def dls_sum_ri(self):
         """
@@ -265,7 +280,15 @@ class DLS(HDF5):
         -------
 
         """
-        pass
+        wells = self.wells()
+        refin = []
+        for well in wells:
+            well_num = self.well_name_to_num(well)
+            refin = np.append(refin,
+                              self.file['Application1']['Run1'][well_num]
+                              ['DLS_Data']['DLS0001'].
+                              attrs['Refractive Index'])
+        return refin
 
     def dls_sum_der_intensity(self):
         """
@@ -283,7 +306,14 @@ class DLS(HDF5):
         -------
 
         """
-        pass
+        wells = self.wells()
+        minpa = []
+        for well in wells:
+            well_num = self.well_name_to_num(well)
+            minpa = np.append(minpa,
+                              self.file['Application1']['Run1'][well_num]
+                              ['DLS_Data'].attrs['Minimum Area'])
+        return minpa
 
     def dls_sum_min_rh(self):
         """
@@ -292,7 +322,14 @@ class DLS(HDF5):
         -------
 
         """
-        pass
+        wells = self.wells()
+        minrh = []
+        for well in wells:
+            well_num = self.well_name_to_num(well)
+            minrh = np.append(minrh,
+                              self.file['Application1']['Run1'][well_num]
+                              ['DLS_Data'].attrs['Minimum Rh'])
+        return minrh
 
     # ----------------------------------------------------------------------- #
     # WRITE DATA TO CSV                                                       #
