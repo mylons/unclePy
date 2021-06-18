@@ -30,6 +30,17 @@ class HDF5:
     # ----------------------------------------------------------------------- #
     # GENERIC DATA COLLECTION                                                 #
     # ----------------------------------------------------------------------- #
+    def run_name(self):
+        """
+        Returns
+        -------
+        str
+            Name of current run
+        """
+        run_name = self.file['Application1']['Run1'].attrs['Run Name'].\
+            decode('utf-8')
+        return run_name
+
     def wells(self):
         """
         Returns
