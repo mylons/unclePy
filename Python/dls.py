@@ -358,7 +358,7 @@ class DLS(HDF5):
             laser = np.append(laser,
                               self.file['Application1']['Run1'][well_num]
                               ['DLS_Data']['DLS0001'].
-                              attrs['Laser %'] / 100)
+                              attrs['Laser %'])
         return laser
 
     def dls_sum_der_intensity(self):
@@ -368,11 +368,12 @@ class DLS(HDF5):
         Returns
         -------
         np.array
+            unit: counts per second (cps)
             Derived intensities for all wells
         """
         inten = self.dls_sum_intensity()
-        atten = self.dls_atten_perc()
-        laser = self.dls_laser_perc()
+        atten = self.dls_atten_perc() / 100
+        laser = self.dls_laser_perc() / 100
         dis = []
         for i, a, l in zip(inten, atten, laser):
             dis = np.append(dis, (i / a / l))
