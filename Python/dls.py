@@ -192,12 +192,23 @@ class DLS(HDF5):
 
     def dls_sum_pdi(self):
         """
+        PDI = (σ/d)^2
+        σ = standard deviation
+        d = mean particle diameter
 
         Returns
         -------
-
+        np.array
+            PDI (polydispersity index) values for all wells
         """
-        pass
+        wells = self.wells()
+        zave_diams = self.dls_sum_zave_diam(raw = True)
+        stdev_diams = self.dls_sum_sd_diam(raw = True)
+        pdis = []
+        for s, z in zip(stdev_diams, zave_diams):
+            pdis = np.append(pdis, ((s / z) ** 2))
+
+        return pdis
 
     def dls_sum_fit_var(self):
         """
