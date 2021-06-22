@@ -110,7 +110,8 @@ class DLS(HDF5):
         """
         Returns
         -------
-
+        np.array
+            Temperatures used in DLS analysis for all wells
         """
         wells = self.wells()
         temps = []
@@ -201,13 +202,11 @@ class DLS(HDF5):
         np.array
             PDI (polydispersity index) values for all wells
         """
-        wells = self.wells()
         zave_diams = self.dls_sum_zave_diam(raw = True)
         stdev_diams = self.dls_sum_sd_diam(raw = True)
         pdis = []
         for s, z in zip(stdev_diams, zave_diams):
             pdis = np.append(pdis, ((s / z) ** 2))
-
         return pdis
 
     def dls_sum_fit_var(self):
@@ -269,10 +268,10 @@ class DLS(HDF5):
 
     def dls_sum_data_filter(self):
         """
-
         Returns
         -------
-
+        np.array
+            Filter used in DLS analysis for all wells
         """
         wells = self.wells()
         dataf = []
@@ -286,10 +285,10 @@ class DLS(HDF5):
 
     def dls_sum_viscosity(self):
         """
-
         Returns
         -------
-
+        np.array
+            Viscosity found in DLS analysis for all wells
         """
         wells = self.wells()
         visco = []
@@ -302,10 +301,10 @@ class DLS(HDF5):
 
     def dls_sum_ri(self):
         """
-
         Returns
         -------
-
+        np.array
+            Refractive index used in DLS analysis for all wells
         """
         wells = self.wells()
         refin = []
@@ -328,10 +327,10 @@ class DLS(HDF5):
 
     def dls_sum_min_pk_area(self):
         """
-
         Returns
         -------
-
+        np.array
+            Minimum peak area used in DLS analysis for all wells
         """
         wells = self.wells()
         minpa = []
@@ -344,10 +343,10 @@ class DLS(HDF5):
 
     def dls_sum_min_rh(self):
         """
-
         Returns
         -------
-
+        np.array
+            Minimum relative humidity used in DLS analysis for all wells
         """
         wells = self.wells()
         minrh = []
