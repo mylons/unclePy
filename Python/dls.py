@@ -316,14 +316,60 @@ class DLS(HDF5):
                               attrs['Refractive Index'])
         return refin
 
+    def dls_atten_perc(self):
+        """
+        Returns
+        -------
+        np.array
+            Attenuation percentage used for all wells.
+            Used for calculating derived intensity
+            Returned as float, i.e. 75% = 0.75
+        """
+        wells = self.wells()
+        atten = []
+        for well in wells:
+            well_num = self.well_name_to_num(well)
+            atten = np.append(atten,
+                              self.file['Application1']['Run1'][well_num]
+                              ['DLS_Data']['DLS0001'].
+                              attrs['Attenuation %'] / 100)
+        return atten
+
+    def dls_laser_perc(self):
+        """
+        Returns
+        -------
+        np.array
+            Laser percentage used for all wells.
+            Used for calculating derived intensity
+            Returned as float, i.e. 75% = 0.75
+        """
+        wells = self.wells()
+        laser = []
+        for well in wells:
+            well_num = self.well_name_to_num(well)
+            laser = np.append(laser,
+                              self.file['Application1']['Run1'][well_num]
+                              ['DLS_Data']['DLS0001'].
+                              attrs['Laser %'] / 100)
+        return laser
+
     def dls_sum_der_intensity(self):
         """
+        Derived intensity = intensity / attenuation % / laser %
 
         Returns
         -------
-
+        np.array
+            Derived intensities for all wells
         """
-        pass
+        inten = self.dls_sum_intensity()
+        atten = self.dls_atten_perc()
+        laser = self.dls_laser_perc()
+        dis = []
+        for i, a, l in zip(inten, atten, laser):
+            dis = np.append(dis, (i / a / l))
+        return dis
 
     def dls_sum_min_pk_area(self):
         """
