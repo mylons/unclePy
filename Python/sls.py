@@ -399,6 +399,26 @@ class SLS(HDF5):
 
         return df
 
+    def sls_bundle(self, well):
+        """
+        NOTE: the bundle file is identical to the "SLS export" file so this
+              method simply calls self.sls_export()
+
+        Parameters
+        ----------
+        well : str
+            Single well name, e.g. 'A1'
+
+        Returns
+        -------
+        pd.DataFrame
+            Full dataframe of BCM/nm, SLS 266 nm/Count, SLS 473 nm/Count
+                for single well
+            This is comparable to an Excel tab for one well, e.g. 'A1'
+        """
+        df = self.sls_export(well)
+        return df
+
     # ----------------------------------------------------------------------- #
     # WRITE DATA TO EXCEL                                                     #
     # ----------------------------------------------------------------------- #
@@ -433,6 +453,22 @@ class SLS(HDF5):
         df = self.sls_sum()
         df.to_excel(save_path, index = False)
 
+    def write_sls_sum_csv(self, save_directory):
+        """
+        Parameters
+        ----------
+        save_directory : str
+            Directory to save CSVs to
+
+        Returns
+        -------
+        None
+        """
+        df = self.sls_sum()
+        run_name = self.run_name()
+        df.to_csv('{}/{}-SLS Sum.csv'.format(save_directory, run_name),
+                  index = False)
+
     def write_sls_export_excel(self, save_path):
         """
         Parameters
@@ -450,6 +486,26 @@ class SLS(HDF5):
                 df = self.sls_export(well)
                 df.to_excel(writer, sheet_name = well, index = False)
 
+    def write_sls_bundle_csv(self, save_directory):
+        """
+        Parameters
+        ----------
+        save_directory : str
+            Directory to save CSVs to
+
+        Returns
+        -------
+        None
+        """
+        wells = self.wells()
+        run_name = self.run_name()
+        for well in wells:
+            df = self.sls_bundle(well)
+            df.to_csv('{}/{}-SLS Bundle-{}.csv'.format(save_directory,
+                                                       run_name, well),
+                      index = False)
+
 
 h5 = SLS('/Users/jmiller/Desktop/UNcle Files/uni files/210602-01-Seq1 Cas9-pH003R.uni')
 h6 = SLS('/Users/jmiller/Desktop/UNcle Files/uni files/Gen6 uni 1,2,3.uni')
+save_directory = '/Users/jmiller/Desktop/UNcle Files/Misc/'
