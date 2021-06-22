@@ -111,6 +111,7 @@ class DLS(HDF5):
         Returns
         -------
         np.array
+            unit: °C
             Temperatures used in DLS analysis for all wells
         """
         wells = self.wells()
@@ -124,7 +125,7 @@ class DLS(HDF5):
                               attrs['Temperature'])
         return temps
 
-    def dls_sum_zave_diam(self, raw = True):
+    def dls_sum_zave_diam(self, raw = True, diam = True):
         """
         Parameters
         ----------
@@ -132,26 +133,30 @@ class DLS(HDF5):
             Return raw or modified values
             Modified values have upper limit of 1000, therefore any value
                 greater than 1000 will be returned as ">1000"
+        diam : bool (default = True)
+            Return diameters (True) or radii (False)
 
         Returns
         -------
         np.array
+            unit: nanometer (nm)
             If raw values, values are floats
             If not raw values, values are strings (due to ">1000")
         """
         wells = self.wells()
-        diams = []
+        vals = []
         for well in wells:
             well_num = self.well_name_to_num(well)
-            radius = self.file['Application1']['Run1'][well_num] \
+            val = self.file['Application1']['Run1'][well_num] \
                 ['DLS_Data']['DLS0001'] \
                 ['ExperimentAveraged']['AverageCorrelation'] \
                 .attrs['Radius']
-            diam = radius * self.factor
-            if not raw and diam > 1000:
-                diam = '>1000'
-            diams = np.append(diams, diam)
-        return diams
+            if diam:
+                val = val * self.factor
+            if not raw and val > 1000:
+                val = '>1000'
+            vals = np.append(vals, val)
+        return vals
 
     def dls_sum_zave_diff_coeff(self):
         """
@@ -174,6 +179,7 @@ class DLS(HDF5):
         Returns
         -------
         np.array
+            unit: nanometer (nm)
             If raw values, values are floats
             If not raw values, values are strings (due to ">1000")
         """
@@ -202,7 +208,7 @@ class DLS(HDF5):
         np.array
             PDI (polydispersity index) values for all wells
         """
-        zave_diams = self.dls_sum_zave_diam(raw = True)
+        zave_diams = self.dls_sum_zave_diam(raw = True, diam = True)
         stdev_diams = self.dls_sum_sd_diam(raw = True)
         pdis = []
         for s, z in zip(stdev_diams, zave_diams):
@@ -288,6 +294,7 @@ class DLS(HDF5):
         Returns
         -------
         np.array
+            unit: centipoise (cP)
             Viscosity found in DLS analysis for all wells
         """
         wells = self.wells()
@@ -323,7 +330,7 @@ class DLS(HDF5):
         np.array
             Attenuation percentage used for all wells.
             Used for calculating derived intensity
-            Returned as float, i.e. 75% = 0.75
+            Returned as float percentage, i.e. 75% = 75.0
         """
         wells = self.wells()
         atten = []
@@ -342,7 +349,7 @@ class DLS(HDF5):
         np.array
             Laser percentage used for all wells.
             Used for calculating derived intensity
-            Returned as float, i.e. 75% = 0.75
+            Returned as float percentage, i.e. 75% = 75.0
         """
         wells = self.wells()
         laser = []
@@ -377,6 +384,7 @@ class DLS(HDF5):
         -------
         np.array
             Minimum peak area used in DLS analysis for all wells
+            Returned as float percentage, i.e. 75% = 75.0
         """
         wells = self.wells()
         minpa = []
