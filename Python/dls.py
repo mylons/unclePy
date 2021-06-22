@@ -123,12 +123,20 @@ class DLS(HDF5):
                               attrs['Temperature'])
         return temps
 
-    def dls_sum_zave_diam(self):
+    def dls_sum_zave_diam(self, raw = True):
         """
+        Parameters
+        ----------
+        raw : bool (default = True)
+            Return raw or modified values
+            Modified values have upper limit of 1000, therefore any value
+                greater than 1000 will be returned as ">1000"
 
         Returns
         -------
-
+        np.array
+            If raw values, values are floats
+            If not raw values, values are strings (due to ">1000")
         """
         wells = self.wells()
         diams = []
@@ -139,7 +147,7 @@ class DLS(HDF5):
                 ['ExperimentAveraged']['AverageCorrelation'] \
                 .attrs['Radius']
             diam = radius * self.factor
-            if diam > 1000:
+            if not raw and diam > 1000:
                 diam = '>1000'
             diams = np.append(diams, diam)
         return diams
@@ -153,12 +161,20 @@ class DLS(HDF5):
         """
         pass
 
-    def dls_sum_sd_diam(self):
+    def dls_sum_sd_diam(self, raw = True):
         """
+        Parameters
+        ----------
+        raw : bool (default = True)
+            Return raw or modified values
+            Modified values have upper limit of 1000, therefore any value
+                greater than 1000 will be returned as ">1000"
 
         Returns
         -------
-
+        np.array
+            If raw values, values are floats
+            If not raw values, values are strings (due to ">1000")
         """
         wells = self.wells()
         diams = []
@@ -169,7 +185,7 @@ class DLS(HDF5):
                 ['ExperimentAveraged']['AverageCorrelation'] \
                 .attrs['StdDev']
             diam = radius * self.factor
-            if diam > 1000:
+            if not raw and diam > 1000:
                 diam = '>1000'
             diams = np.append(diams, diam)
         return diams
