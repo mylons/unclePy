@@ -1,6 +1,7 @@
 from hdf5 import HDF5
 import pandas as pd
 import numpy as np
+from scipy.constants import Boltzmann, convert_temperature
 
 
 class DLS(HDF5):
@@ -165,7 +166,12 @@ class DLS(HDF5):
         -------
 
         """
-        pass
+        abs_temp = convert_temperature(self.dls_sum_temperatures(),
+                                       'Celsius', 'Kelvin')  # C to K
+        rad_m = self.dls_sum_zave_diam(diam = False) / 1000000000  # nm to m
+        visco = self.dls_sum_viscosity() / 1000  # cP to kg/m-s
+        coef = (Boltzmann * abs_temp) / (6 * np.pi * visco * rad_m)
+        return coef
 
     def dls_sum_sd_diam(self, raw = True):
         """
