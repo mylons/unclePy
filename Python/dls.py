@@ -286,16 +286,20 @@ class DLS(HDF5):
             df[df > 1000] = '>1000'
         return df
 
-    def dls_sum_pk_est_mw(self):
-        # TODO can you iterate over all PK here?
+    def dls_sum_pk_est_mw(self, raw = True):
         """
+        NOTE: What is the highest value before "Out of Range"?
+              So far, the highest value seen that still displays: 23,983.70
 
         Returns
         -------
-
+        pd.DataFrame
+            Estimate molecular weights for all wells
         """
         rad = self.dls_sum_pk_mode_diam(raw = True, diam = False)
         mw = 2.75 * (rad**2.49)
+        if not raw:
+            mw[mw > 25000] = 'Out of Range'  # Adjust accordingly to note above
         return mw
 
     def dls_sum_pk_poly(self):
