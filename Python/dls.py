@@ -303,14 +303,28 @@ class DLS(HDF5):
         return mw
 
     def dls_sum_pk_poly(self):
-        # TODO can you iterate over all PK here?
         """
+        peak polydispersity (%) = (peak std / peak mean) * 100
 
         Returns
         -------
-
+        pd.DataFrame
+            Polydispersity percentage for all peaks for all wells
         """
-        pass
+        wells = self.wells()
+        pk_poly = {}
+        for well in wells:
+            well_num = self.well_name_to_num(well)
+            path = self.file['Application1']['Run1'][well_num] \
+                ['DLS_Data']['DLS0001']['ExperimentAveraged'] \
+                ['AverageCorrelation']['Intensity']
+            peaks = [i for i in path.keys() if 'peak' in i.lower()]
+            for peak in peaks:
+                std = path[peak].attrs['Std'].item()
+                mean = path[peak].attrs['Mean'].item()
+                pk_poly.setdefault(well, []).append(100 * std / mean)
+        df = pd.DataFrame.from_dict(pk_poly, orient = 'index')
+        return df
 
     def dls_sum_data_filter(self):
         """
