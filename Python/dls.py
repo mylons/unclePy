@@ -263,7 +263,7 @@ class DLS(HDF5):
         Returns
         -------
         pd.DataFrame
-            Peak modal diameters for all wells
+            Peak modal diameters for all peaks for all wells
         """
         wells = self.wells()
         diams = {}
@@ -294,7 +294,7 @@ class DLS(HDF5):
         Returns
         -------
         pd.DataFrame
-            Estimate molecular weights for all wells
+            Estimate molecular weights for all peaks for all wells
         """
         rad = self.dls_sum_pk_mode_diam(raw = True, diam = False)
         mw = 2.75 * (rad**2.49)
