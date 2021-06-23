@@ -297,7 +297,9 @@ class DLS(HDF5):
         -------
 
         """
-
+        rad = self.dls_sum_pk_mode_diam(raw = True, diam = False)
+        mw = 2.75 * (rad**2.49)
+        return mw
 
     def dls_sum_pk_poly(self):
         # TODO can you iterate over all PK here?
