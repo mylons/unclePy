@@ -248,15 +248,41 @@ class DLS(HDF5):
                               attrs['AverageIntensity'])
         return inten
 
-    def dls_sum_pk_mode_diam(self):
-        # TODO can you iterate over all PK here?
+    def dls_sum_pk_mode_diam(self, raw = True, diam = True):
         """
+        Parameters
+        ----------
+        raw : bool (default = True)
+            Return raw or modified values
+            Modified values have upper limit of 1000, therefore any value
+                greater than 1000 will be returned as ">1000"
+        diam : bool (default = True)
+            Return diameters (True) or radii (False)
 
         Returns
         -------
-
+        pd.DataFrame
+            Peak modal diameters for all wells
         """
-        pass
+        wells = self.wells()
+        diams = {}
+        for well in wells:
+            well_num = self.well_name_to_num(well)
+            peaks = [i for i in self.file['Application1']['Run1'][well_num]
+                     ['DLS_Data']['DLS0001']['ExperimentAveraged']
+                     ['AverageCorrelation']['Intensity'].keys()
+                     if 'peak' in i.lower()]
+            for peak in peaks:
+                val = self.file['Application1']['Run1'][well_num] \
+                    ['DLS_Data']['DLS0001']['ExperimentAveraged'] \
+                    ['AverageCorrelation']['Intensity'][peak] \
+                    .attrs['Max'].item()
+                if diam:
+                    val = val * self.factor
+                if not raw and val > 1000:
+                    val = '>1000'
+                diams.setdefault(well, []).append(val)
+        return pd.DataFrame.from_dict(diams, orient = 'index')
 
     def dls_sum_pk_est_mw(self):
         # TODO can you iterate over all PK here?
@@ -266,7 +292,7 @@ class DLS(HDF5):
         -------
 
         """
-        pass
+
 
     def dls_sum_pk_poly(self):
         # TODO can you iterate over all PK here?
