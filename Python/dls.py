@@ -56,7 +56,7 @@ class DLS(HDF5):
 
         Returns
         -------
-        np.array
+        pd.DataFrame
             Mass hydrodynamic diameter(nm) and amplitude for a single well
         """
         well_num = self.well_name_to_num(well)
@@ -77,7 +77,7 @@ class DLS(HDF5):
 
         Returns
         -------
-        np.array
+        pd.DataFrame
             Correlation time(sec) and amplitude for a single well
         """
         well_num = self.well_name_to_num(well)
@@ -111,7 +111,7 @@ class DLS(HDF5):
         """
         Returns
         -------
-        np.array
+        pd.Series
             unit: °C
             Temperatures used in DLS analysis for all wells
         """
@@ -124,7 +124,7 @@ class DLS(HDF5):
                               ['DLS_Data']['DLS0001']
                               ['ExperimentAveraged']['AverageCorrelation'].
                               attrs['Temperature'])
-        return temps
+        return pd.Series(temps)
 
     def dls_sum_zave_diam(self, raw = True, diam = True):
         """
@@ -139,7 +139,7 @@ class DLS(HDF5):
 
         Returns
         -------
-        np.array
+        pd.Series
             unit: nanometer (nm)
             If raw values, values are floats
             If not raw values, values are strings (due to ">1000")
@@ -157,7 +157,7 @@ class DLS(HDF5):
             if not raw and val > 1000:
                 val = '>1000'
             vals = np.append(vals, val)
-        return vals
+        return pd.Series(vals)
 
     def dls_sum_zave_diff_coeff(self):
         """
@@ -184,7 +184,7 @@ class DLS(HDF5):
 
         Returns
         -------
-        np.array
+        pd.Series
             unit: nanometer (nm)
             If raw values, values are floats
             If not raw values, values are strings (due to ">1000")
@@ -201,7 +201,7 @@ class DLS(HDF5):
             if not raw and diam > 1000:
                 diam = '>1000'
             diams = np.append(diams, diam)
-        return diams
+        return pd.Series(diams)
 
     def dls_sum_pdi(self):
         """
@@ -211,7 +211,7 @@ class DLS(HDF5):
 
         Returns
         -------
-        np.array
+        pd.Series
             PDI (polydispersity index) values for all wells
         """
         zave_diams = self.dls_sum_zave_diam(raw = True, diam = True)
@@ -219,7 +219,7 @@ class DLS(HDF5):
         pdis = []
         for s, z in zip(stdev_diams, zave_diams):
             pdis = np.append(pdis, ((s / z) ** 2))
-        return pdis
+        return pd.Series(pdis)
 
     def dls_sum_fit_var(self):
         """
@@ -232,9 +232,10 @@ class DLS(HDF5):
 
     def dls_sum_intensity(self):
         """
-
         Returns
         -------
+        pd.Series
+            Intensities (cps) for all wells
 
         """
         wells = self.wells()
@@ -246,7 +247,7 @@ class DLS(HDF5):
                               ['DLS_Data']['DLS0001']
                               ['ExperimentAveraged']['AverageCorrelation'].
                               attrs['AverageIntensity'])
-        return inten
+        return pd.Series(inten)
 
     def dls_sum_pk_mode_diam(self, raw = True, diam = True):
         """
@@ -277,10 +278,6 @@ class DLS(HDF5):
                     ['DLS_Data']['DLS0001']['ExperimentAveraged'] \
                     ['AverageCorrelation']['Intensity'][peak] \
                     .attrs['Max'].item()
-                # if diam:
-                #     val = val * self.factor
-                # if not raw and val > 1000:
-                #     val = '>1000'
                 diams.setdefault(well, []).append(val)
         df = pd.DataFrame.from_dict(diams, orient = 'index')
         if diam:
@@ -315,7 +312,7 @@ class DLS(HDF5):
         """
         Returns
         -------
-        np.array
+        pd.Series
             Filter used in DLS analysis for all wells
         """
         wells = self.wells()
@@ -326,13 +323,13 @@ class DLS(HDF5):
                               self.file['Application1']['Run1'][well_num]
                               ['DLS_Data'].attrs['Data Filter Name'].
                               decode('utf-8'))
-        return dataf
+        return pd.Series(dataf)
 
     def dls_sum_viscosity(self):
         """
         Returns
         -------
-        np.array
+        pd.Series
             unit: centipoise (cP)
             Viscosity found in DLS analysis for all wells
         """
@@ -343,13 +340,13 @@ class DLS(HDF5):
             visco = np.append(visco,
                               self.file['Application1']['Run1'][well_num]
                               ['DLS_Data']['DLS0001'].attrs['Viscosity'])
-        return visco
+        return pd.Series(visco)
 
     def dls_sum_ri(self):
         """
         Returns
         -------
-        np.array
+        pd.Series
             Refractive index used in DLS analysis for all wells
         """
         wells = self.wells()
@@ -360,13 +357,13 @@ class DLS(HDF5):
                               self.file['Application1']['Run1'][well_num]
                               ['DLS_Data']['DLS0001'].
                               attrs['Refractive Index'])
-        return refin
+        return pd.Series(refin)
 
     def dls_atten_perc(self):
         """
         Returns
         -------
-        np.array
+        pd.Series
             Attenuation percentage used for all wells.
             Used for calculating derived intensity
             Returned as float percentage, i.e. 75% = 75.0
@@ -378,14 +375,14 @@ class DLS(HDF5):
             atten = np.append(atten,
                               self.file['Application1']['Run1'][well_num]
                               ['DLS_Data']['DLS0001'].
-                              attrs['Attenuation %'] / 100)
-        return atten
+                              attrs['Attenuation %'])
+        return pd.Series(atten)
 
     def dls_laser_perc(self):
         """
         Returns
         -------
-        np.array
+        pd.Series
             Laser percentage used for all wells.
             Used for calculating derived intensity
             Returned as float percentage, i.e. 75% = 75.0
@@ -398,7 +395,7 @@ class DLS(HDF5):
                               self.file['Application1']['Run1'][well_num]
                               ['DLS_Data']['DLS0001'].
                               attrs['Laser %'])
-        return laser
+        return pd.Series(laser)
 
     def dls_sum_der_intensity(self):
         """
@@ -406,7 +403,7 @@ class DLS(HDF5):
 
         Returns
         -------
-        np.array
+        pd.Series
             unit: counts per second (cps)
             Derived intensities for all wells
         """
@@ -416,13 +413,13 @@ class DLS(HDF5):
         dis = []
         for i, a, l in zip(inten, atten, laser):
             dis = np.append(dis, (i / a / l))
-        return dis
+        return pd.Series(dis)
 
     def dls_sum_min_pk_area(self):
         """
         Returns
         -------
-        np.array
+        pd.Series
             Minimum peak area used in DLS analysis for all wells
             Returned as float percentage, i.e. 75% = 75.0
         """
@@ -433,13 +430,13 @@ class DLS(HDF5):
             minpa = np.append(minpa,
                               self.file['Application1']['Run1'][well_num]
                               ['DLS_Data'].attrs['Minimum Area'])
-        return minpa
+        return pd.Series(minpa)
 
     def dls_sum_min_rh(self):
         """
         Returns
         -------
-        np.array
+        pd.Series
             Minimum relative humidity used in DLS analysis for all wells
         """
         wells = self.wells()
@@ -449,7 +446,7 @@ class DLS(HDF5):
             minrh = np.append(minrh,
                               self.file['Application1']['Run1'][well_num]
                               ['DLS_Data'].attrs['Minimum Rh'])
-        return minrh
+        return pd.Series(minrh)
 
     # ----------------------------------------------------------------------- #
     # WRITE DATA TO CSV                                                       #
