@@ -277,12 +277,17 @@ class DLS(HDF5):
                     ['DLS_Data']['DLS0001']['ExperimentAveraged'] \
                     ['AverageCorrelation']['Intensity'][peak] \
                     .attrs['Max'].item()
-                if diam:
-                    val = val * self.factor
-                if not raw and val > 1000:
-                    val = '>1000'
+                # if diam:
+                #     val = val * self.factor
+                # if not raw and val > 1000:
+                #     val = '>1000'
                 diams.setdefault(well, []).append(val)
-        return pd.DataFrame.from_dict(diams, orient = 'index')
+        df = pd.DataFrame.from_dict(diams, orient = 'index')
+        if diam:
+            df = 2 * df
+        if not raw:
+            df[df > 1000] = '>1000'
+        return df
 
     def dls_sum_pk_est_mw(self):
         # TODO can you iterate over all PK here?
