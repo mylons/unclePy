@@ -15,40 +15,57 @@ class SLS(HDF5):
     -------
     sls_temperatures(well)
         Returns temperatures used for single well
+
     sls_times(well)
         Returns times used for single well
+
     sls_wavelengths(well)
         Returns wavelengths used for single well
+
     sls_intensity(well, temp)
         Returns intensities found at a single temperature for single well
+
     sls_color(well)
         *** NOT CURRENTLY IMPLEMENTED ***
         Returns color for single well
+
     sls_tms(well)
         Returns all TM values for single well
+
     sls_tonset(well)
         Returns T_onset value for single well
+
     sls_tagg266(well)
         Returns T_agg 266 for single well
+
     sls_tagg473(well)
         Returns T_agg 473 for single well
+
     sls_bcm(well)
         Returns BCM/nm at all temperatures for single well
+
     sls_266(well)
         Returns SLS 266 nm/Count at all temperatures for single well
+
     sls_473(well)
         Returns SLS 473 nm/Count at all temperatures for single well
+
     sls_spec_well(well)
         Returns pd.DataFrame of intensities for single well
+
     sls_sum()
         Returns pd.DataFrame of summary for entire experiment
+
     sls_export(well)
         Returns pd.DataFrame of BCM/nm, SLS 266 nm/Count, SLS 473 nm/Count
         for single well
+
     write_sls_spec_excel(save_path)
         Saves spectra file (intensity per wavelength at a temperature)
+
     write_sls_sum_excel(save_path)
         Save summary file
+
     write_sls_export_excel(save_path)
         Saves BCM/nm, SLS 266 nm/Count, SLS 473 nm/Count (at temperature) file
     """
@@ -465,7 +482,7 @@ class SLS(HDF5):
         None
         """
         df = self.sls_sum()
-        run_name = self.run_name()
+        run_name = self.exp_name()
         df.to_csv('{}/{}-SLS Sum.csv'.format(save_directory, run_name),
                   index = False)
 
@@ -498,7 +515,7 @@ class SLS(HDF5):
         None
         """
         wells = self.wells()
-        run_name = self.run_name()
+        run_name = self.exp_name()
         for well in wells:
             df = self.sls_bundle(well)
             df.to_csv('{}/{}-SLS Bundle-{}.csv'.format(save_directory,

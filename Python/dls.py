@@ -16,49 +16,71 @@ class DLS(HDF5):
     -------
     dls_intensity(well)
         Returns hydrodynamic diameter and amplitude for single well
+
     dls_mass(well)
         Returns mass hydrodynamic diameter and amplitude for single well
+
     dls_correlation(well)
         Returns correlation time and amplitude for single well
+
     dls_sum_color(well)
         *** NOT CURRENTLY IMPLEMENTED ***
         Returns color for single well
+
     dls_sum_temperature()
         Returns temperatures used for all wells
+
     dls_sum_zave_diam(raw, diam)
         Returns Z-average diameters/radii for all wells
+
     dls_sum_zave_diff_coeff()
         Returns Z-average differential coefficients for all wells
+
     dls_sum_sd_diam(raw)
         Returns standard deviation of diameter for all wells
+
     dls_sum_pdi()
         Returns polydispersity index for all wells
+
     dls_sum_fit_var()
         # TODO need to incorporate
+
     dls_sum_intensity()
         Returns intensities for all wells
+
     dls_sum_pk_mode_diam(raw, diam)
         Returns modal diameters/radii for all peaks for all wells
+
     dls_sum_pk_est_mw(raw)
         Returns estimated molecular weights for all peaks for all wells
+
     dls_sum_pk_poly()
         Returns polydispersity percentage for all peaks for all wells
+
     dls_sum_data_filter()
         Returns filter used for all wells
+
     dls_sum_viscosity()
         Returns viscosity for all wells
+
     dls_sum_ri()
         Returns refractive index for all wells
+
     dls_atten_perc()
         Returns attenuation percentage for all wells
+
     dls_laser_perc()
         Returns laser percentage for all wells
+
     dls_sum_der_intensity()
         Returns derived intensiteis for all wells
+
     dls_sum_min_pk_area()
         Returns minimum peak area for all wells
+
     dls_sum_min_rh()
         Returns minimum relative humidity for all wells
+
     write_dls_bundle_csv(save_directory)
         Writes 3 files (Intensity, Mass, Correlation) for each well
     """

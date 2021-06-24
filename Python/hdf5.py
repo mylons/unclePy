@@ -7,6 +7,14 @@ class HDF5:
     """
     Generic class to load .uni (HDF5) files
 
+    Assumed naming convention:
+        Date-InstNum-Prod-PlateInfo.uni
+            Date: YYMMDD (e.g. 210602)
+            InstNum: Instrument number (e.g. 01)
+            Prod: Product name (e.g. Seq1 Cas9)
+            PlateInfo: Plate type, generation, side (e.g. pH003R)
+            Example: 210602-01-Seq1 Cas9-pH003R.uni
+
     Attributes
     ----------
     file_path : str
@@ -49,10 +57,7 @@ class HDF5:
     def __init__(self, file_path):
         self.file = h5py.File(file_path, 'r')
 
-    # ----------------------------------------------------------------------- #
-    # GENERIC DATA COLLECTION                                                 #
-    # ----------------------------------------------------------------------- #
-    def run_name(self):
+    def exp_name(self):
         """
         Returns
         -------
@@ -70,7 +75,7 @@ class HDF5:
         str
             Date of experiment (YYMMDD)
         """
-        return self.run_name().split('-')[0]
+        return self.exp_name().split('-')[0]
 
     def exp_inst_num(self):
         """
@@ -79,7 +84,7 @@ class HDF5:
         str
             Instrument number used in experiment
         """
-        return self.run_name().split('-')[1]
+        return self.exp_name().split('-')[1]
 
     def exp_product(self):
         """
@@ -88,7 +93,7 @@ class HDF5:
         str
             Product used in experiment
         """
-        return self.run_name().split('-')[2]
+        return self.exp_name().split('-')[2]
 
     def exp_plate_type(self):
         """
@@ -97,7 +102,7 @@ class HDF5:
         str
             Plate type used in experiment
         """
-        plate_info = self.run_name().split('-')[-1]
+        plate_info = self.exp_name().split('-')[-1]
         plate_type = re.search(r'\D+', plate_info)
         return plate_type.group()
 
@@ -108,7 +113,7 @@ class HDF5:
         str
             Generation of plate layout used in experiment
         """
-        plate_info = self.run_name().split('-')[-1]
+        plate_info = self.exp_name().split('-')[-1]
         plate_gen = re.search(r'\d+', plate_info)
         return plate_gen.group()
 
@@ -119,7 +124,7 @@ class HDF5:
         str
             Plate side used in experiment
         """
-        plate_info = self.run_name().split('-')[-1]
+        plate_info = self.exp_name().split('-')[-1]
         plate_side = re.search(r'\D+$', plate_info)
         return plate_side.group()
 
