@@ -1,5 +1,6 @@
 import h5py
 import numpy as np
+import re
 
 
 class HDF5:
@@ -13,6 +14,27 @@ class HDF5:
 
     Methods
     -------
+    run_name()
+        Returns name of experimental run
+
+    exp_date()
+        Returns date of experiment
+
+    exp_inst_num()
+        Returns number of instrument used in experiment
+
+    exp_product()
+        Returns product tested in experiment
+
+    exp_plate_type()
+        Returns type of plate/screen used in experiment (pH, cond, gen)
+
+    exp_generation()
+        Returns generation of plate layout used in experiment
+
+    exp_plate_side()
+        Returns side of plate used in experiment (L/R)
+
     wells()
         Returns names of wells used in experiment
 
@@ -40,6 +62,66 @@ class HDF5:
         run_name = self.file['Application1']['Run1'].attrs['Run Name'].\
             decode('utf-8')
         return run_name
+
+    def exp_date(self):
+        """
+        Returns
+        -------
+        str
+            Date of experiment (YYMMDD)
+        """
+        return self.run_name().split('-')[0]
+
+    def exp_inst_num(self):
+        """
+        Returns
+        -------
+        str
+            Instrument number used in experiment
+        """
+        return self.run_name().split('-')[1]
+
+    def exp_product(self):
+        """
+        Returns
+        -------
+        str
+            Product used in experiment
+        """
+        return self.run_name().split('-')[2]
+
+    def exp_plate_type(self):
+        """
+        Returns
+        -------
+        str
+            Plate type used in experiment
+        """
+        plate_info = self.run_name().split('-')[-1]
+        plate_type = re.search(r'\D+', plate_info)
+        return plate_type.group()
+
+    def exp_generation(self):
+        """
+        Returns
+        -------
+        str
+            Generation of plate layout used in experiment
+        """
+        plate_info = self.run_name().split('-')[-1]
+        plate_gen = re.search(r'\d+', plate_info)
+        return plate_gen.group()
+
+    def exp_plate_side(self):
+        """
+        Returns
+        -------
+        str
+            Plate side used in experiment
+        """
+        plate_info = self.run_name().split('-')[-1]
+        plate_side = re.search(r'\D+$', plate_info)
+        return plate_side.group()
 
     def wells(self):
         """
