@@ -1,6 +1,8 @@
 from hdf5 import HDF5
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
 from scipy.constants import Boltzmann, convert_temperature
 
 
@@ -296,7 +298,40 @@ class DLS(HDF5):
         -------
 
         """
-        pass
+        wells = self.wells()
+        for well in wells:
+            well_num = self.well_name_to_num(well)
+            corr_data = self.file['Application1']['Run1'][well_num] \
+                ['DLS_Data']['DLS0001']['ExperimentAveraged'] \
+                ['AverageCorrelation']['Correlations'][:]
+            corr = corr_data[:, 0]
+            time = corr_data[:, 1]
+            min_corr = np.max(corr) / 100
+            corr_rel = corr[corr > min_corr]  # TODO arbitrary cutoff here
+            time_rel = time[:len(corr_rel)]
+
+            popt, pcov = curve_fit(func, time_rel, corr_rel)
+            expected_vals = func(time_rel, popt[0], popt[1], popt[2])
+
+            resid = corr_rel - expected_vals
+            sum_of_squares = np.sum(resid**2)
+
+            corr_half = np.max(corr_rel) / 2
+            calc_half = np.max(expected_vals) / 2
+
+            corr_half_x = np.argmin(abs(corr_half - corr_rel))
+            calc_half_x = np.argmin(abs(calc_half - expected_vals))
+            print('Corr half x: {} | Calc half x: {}'.format(corr_half_x, calc_half_x))
+
+            midpt_diff = abs(time_rel[corr_half_x] - time_rel[calc_half_x])
+            print('Midpt diff: {}'.format(midpt_diff))
+
+            del_fac = midpt_diff
+            amp_fac = resid[0]
+
+            print('Well {}: {}'.format(well, amp_fac * del_fac * (sum_of_squares / (len(resid) - 4))))
+
+        return corr_rel, time_rel
 
     def dls_sum_intensity(self):
         """
@@ -560,6 +595,23 @@ class DLS(HDF5):
                            format(well), index = False)
             corr_df.to_csv(save_directory + '/Correlation-{}-15.csv'.
                            format(well), index = False)
+
+
+def func(x, a, b, c):
+    # return a / np.exp(b * x) + c  # DOES NOT WORK
+    return a / np.log(b * x) + c
+    # return a * np.log(b * x) + c
+    # return a * np.exp(b * x) + c
+    # return a*x**3 + b*x**2 + c*x + d
+    # return a*x**2 + b*x + c
+    # return a*x + b
+
+
+def test_overlay(time_rel, corr_rel):
+    popt, pcov = curve_fit(func, time_rel, corr_rel)
+    calc_vals = func(time_rel, popt[0], popt[1], popt[2])
+    plt.plot(time_rel, corr_rel, time_rel, calc_vals)
+    plt.show()
 
 
 h3 = DLS('/Users/jmiller/Desktop/UNcle Files/uni files/210602-01-Seq1 Cas9-pH003R.uni')
