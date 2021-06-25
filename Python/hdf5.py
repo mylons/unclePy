@@ -1,6 +1,9 @@
 import h5py
 import numpy as np
+import pandas as pd
 import re
+from datetime import datetime
+from sqlalchemy import create_engine
 
 
 class HDF5:
@@ -43,6 +46,14 @@ class HDF5:
     exp_plate_side()
         Returns side of plate used in experiment (L/R)
 
+    write_experiment_info_sql(username, password, host, database,
+                              datetime_needed)
+        Saves experiment metadata to PostgreSQL database
+
+    write_instrument_info_sql(username, password, host, database,
+                              datetime_needed)
+        Saves instrument metadata to PostgreSQL database
+
     wells()
         Returns names of wells used in experiment
 
@@ -72,19 +83,20 @@ class HDF5:
         """
         Returns
         -------
-        str
-            Date of experiment (YYMMDD)
+        pd.Timestamp
+            Date of experiment
         """
-        return self.exp_name().split('-')[0]
+        date = self.exp_name().split('-')[0]
+        return pd.to_datetime(date, yearfirst = True)
 
     def exp_inst_num(self):
         """
         Returns
         -------
-        str
+        int
             Instrument number used in experiment
         """
-        return self.exp_name().split('-')[1]
+        return int(self.exp_name().split('-')[1])
 
     def exp_product(self):
         """
@@ -127,6 +139,99 @@ class HDF5:
         plate_info = self.exp_name().split('-')[-1]
         plate_side = re.search(r'\D+$', plate_info)
         return plate_side.group()
+
+    def write_experiment_info_sql(self, username, password, host, database,
+                                  datetime_needed = True):
+        """
+        Parameters
+        ----------
+        username : str
+            Username for database access (e.g. "postgres")
+        password : str
+            Password for database access (likely none, i.e. empty string: "")
+        host : str
+            Host address for database access (e.g. "ebase-db-c")
+        database : str
+            Database name (e.g. "ebase_dev")
+        datetime_needed : bool (default = True)
+            Whether to insert "created_at", "updated_at" columns
+            These are necessary for Rails tables
+
+        Returns
+        -------
+        None
+        """
+        # TODO complete this with real info
+        engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
+            username, password, host, database))
+
+        with engine.connect() as con:
+            inst_id = con.execute("SELECT id FROM uncle_instruments "
+                                  "WHERE id = {};".
+                                  format(self.exp_inst_num()))
+            prod_id = con.execute("SELECT id FROM products "
+                                  "WHERE name = '{}';".
+                                  format(self.exp_product()))
+
+        # TODO what to do if instrument/product do not exist?
+
+        try:
+            inst_id = inst_id.mappings().all()[0]['id']
+        except (TypeError, AttributeError, IndexError):
+            inst_id = None
+
+        try:
+            prod_id = prod_id.mappings().all()[0]['id']
+        except (TypeError, AttributeError, IndexError):
+            prod_id = None
+
+        exp_info = {'name': [self.exp_name()],
+                    'date': [self.exp_date()],
+                    'uncle_instrument_id': inst_id,
+                    'product_id': prod_id,
+                    'exp_type': [self.exp_plate_type()],
+                    'plate_generation': [self.exp_generation()],
+                    'plate_side': [self.exp_plate_side()]}
+        df = pd.DataFrame(exp_info)
+        if datetime_needed:
+            df = add_datetime(df)
+        df.to_sql('uncle_experiments', engine, if_exists = 'append',
+                  index = False)
+
+    def write_instrument_info_sql(self, username, password, host, database,
+                                  datetime_needed = True):
+        """
+        Parameters
+        ----------
+        username : str
+            Username for database access (e.g. "postgres")
+        password : str
+            Password for database access (likely none, i.e. empty string: "")
+        host : str
+            Host address for database access (e.g. "ebase-db-c")
+        database : str
+            Database name (e.g. "ebase_dev")
+        datetime_needed : bool (default = True)
+            Whether to insert "created_at", "updated_at" columns
+            These are necessary for Rails tables
+
+        Returns
+        -------
+        None
+        """
+        # TODO complete this with real info
+        inst_info = {'id': [int(self.exp_inst_num())],
+                     'name': ['Uncle_01'],
+                     'location': ['Shnider/Hough lab'],
+                     'model': ['Uncle']}
+        df = pd.DataFrame(inst_info)
+        if datetime_needed:
+            df = add_datetime(df)
+
+        engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
+            username, password, host, database))
+        df.to_sql('uncle_instruments', engine, if_exists = 'append',
+                  index = False)
 
     def wells(self):
         """
@@ -177,6 +282,24 @@ class HDF5:
         return samples
 
 
+def add_datetime(df):
+    """
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe to add created_at, updated_at columns to
+
+    Returns
+    -------
+    pd.DataFrame
+        Input dataframe with created_at, updated_at columns added
+    """
+    dt = datetime.now()
+    df['created_at'] = dt
+    df['updated_at'] = dt
+    return df
+
+
 def verify(value):
     """
     Parameters
@@ -189,7 +312,6 @@ def verify(value):
     int, float, np.nan
         Depends on input value
         Returns input value if valid, otherwise np.nan
-
     """
     if value != -1:
         return value
