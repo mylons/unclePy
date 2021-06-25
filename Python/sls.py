@@ -1,6 +1,7 @@
-from hdf5 import HDF5, verify
+from hdf5 import HDF5, verify, add_datetime
 import pandas as pd
 import numpy as np
+from sqlalchemy import create_engine
 
 
 class SLS(HDF5):
@@ -517,6 +518,76 @@ class SLS(HDF5):
             df.to_csv('{}/{}-SLS Bundle-{}.csv'.format(save_directory,
                                                        run_name, well),
                       index = False)
+
+    # ----------------------------------------------------------------------- #
+    # WRITE DATA TO POSTGRESQL                                                #
+    # ----------------------------------------------------------------------- #
+    def write_sls_sum_sql(self, username, password, host, database,
+                          datetime_needed = True):
+        """
+        Parameters
+        ----------
+        username : str
+            Username for database access (e.g. "postgres")
+        password : str
+            Password for database access (likely none, i.e. empty string: "")
+        host : str
+            Host address for database access (e.g. "ebase-db-c")
+        database : str
+            Database name (e.g. "ebase_dev")
+        datetime_needed : bool (default = True)
+            Whether to insert "created_at", "updated_at" columns
+            These are necessary for Rails tables
+
+        Returns
+        -------
+        None
+        """
+        df = self.sls_sum()
+        # If uploading raw file, need to append datetime for Rails table
+        df['export_type'] = 'summary'
+        if datetime_needed:
+            df = add_datetime(df)
+
+        engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
+            username, password, host, database))
+        df.to_sql('uncle_sls', engine, if_exists = 'append', index = False)
+
+    def write_sls_bundle_sql(self, username, password, host, database,
+                             datetime_needed = True):
+        """
+        Parameters
+        ----------
+        username : str
+            Username for database access (e.g. "postgres")
+        password : str
+            Password for database access (likely none, i.e. empty string: "")
+        host : str
+            Host address for database access (e.g. "ebase-db-c")
+        database : str
+            Database name (e.g. "ebase_dev")
+        datetime_needed : bool (default = True)
+            Whether to insert "created_at", "updated_at" columns
+            These are necessary for Rails tables
+
+        Returns
+        -------
+        None
+        """
+        engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
+            username, password, host, database))
+
+        wells = self.wells()
+        for well in wells:
+            df = self.sls_bundle(well)
+            df['export_type'] = 'bundle'
+            df['well'] = well
+
+            # TODO need to grab experiment ID
+
+            if datetime_needed:
+                df = add_datetime(df)
+            df.to_sql('uncle_sls', engine, if_exists = 'append', index = False)
 
 
 h5 = SLS('/Users/jmiller/Desktop/UNcle Files/uni files/210602-01-Seq1 Cas9-pH003R.uni')
