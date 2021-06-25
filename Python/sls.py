@@ -62,13 +62,28 @@ class SLS(HDF5):
         for single well
 
     write_sls_spec_excel(save_path)
-        Saves spectra file (intensity per wavelength at a temperature)
+        Saves spectra file (intensity per wavelength at a temperature) to .xlsx
 
     write_sls_sum_excel(save_path)
-        Save summary file
+        Saves summary file to .xlsx
+
+    write_sls_sum_csv(save_path)
+        Saves summary file to .csv
 
     write_sls_export_excel(save_path)
         Saves BCM/nm, SLS 266 nm/Count, SLS 473 nm/Count (at temperature) file
+        to .xlsx
+
+    write_sls_bundle_csv(save_path)
+        Saves BCM/nm, SLS 266 nm/Count, SLS 473 nm/Count (at temperature) file
+        to .csv
+
+    write_sls_sum_sql(username, password, host, database, datetime_needed)
+        Saves summary data to PostgreSQL database
+
+    write_sls_bundle_sql(username, password, host, database, datetime_needed)
+        Saves BCM/nm, SLS 266 nm/Count, SLS 473 nm/Count (at temperature) data
+        to PostgreSQL database
     """
 
     # ----------------------------------------------------------------------- #
@@ -434,7 +449,7 @@ class SLS(HDF5):
         return df
 
     # ----------------------------------------------------------------------- #
-    # WRITE DATA TO EXCEL                                                     #
+    # WRITE DATA TO EXCEL, CSV, SQL                                           #
     # ----------------------------------------------------------------------- #
     def write_sls_spec_excel(self, save_path):
         """
@@ -467,11 +482,11 @@ class SLS(HDF5):
         df = self.sls_sum()
         df.to_excel(save_path, index = False)
 
-    def write_sls_sum_csv(self, save_directory):
+    def write_sls_sum_csv(self, save_path):
         """
         Parameters
         ----------
-        save_directory : str
+        save_path : str
             Directory to save CSVs to
 
         Returns
@@ -480,7 +495,7 @@ class SLS(HDF5):
         """
         df = self.sls_sum()
         run_name = self.exp_name()
-        df.to_csv('{}/{}-SLS Sum.csv'.format(save_directory, run_name),
+        df.to_csv('{}/{}-SLS Sum.csv'.format(save_path, run_name),
                   index = False)
 
     def write_sls_export_excel(self, save_path):
@@ -500,11 +515,11 @@ class SLS(HDF5):
                 df = self.sls_export(well)
                 df.to_excel(writer, sheet_name = well, index = False)
 
-    def write_sls_bundle_csv(self, save_directory):
+    def write_sls_bundle_csv(self, save_path):
         """
         Parameters
         ----------
-        save_directory : str
+        save_path : str
             Directory to save CSVs to
 
         Returns
@@ -515,7 +530,7 @@ class SLS(HDF5):
         run_name = self.exp_name()
         for well in wells:
             df = self.sls_bundle(well)
-            df.to_csv('{}/{}-SLS Bundle-{}.csv'.format(save_directory,
+            df.to_csv('{}/{}-SLS Bundle-{}.csv'.format(save_path,
                                                        run_name, well),
                       index = False)
 
@@ -592,4 +607,4 @@ class SLS(HDF5):
 
 h5 = SLS('/Users/jmiller/Desktop/UNcle Files/uni files/210602-01-Seq1 Cas9-pH003R.uni')
 h6 = SLS('/Users/jmiller/Desktop/UNcle Files/uni files/Gen6 uni 1,2,3.uni')
-save_directory = '/Users/jmiller/Desktop/UNcle Files/Misc/'
+save_path = '/Users/jmiller/Desktop/UNcle Files/Misc/'
