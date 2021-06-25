@@ -356,32 +356,30 @@ class SLS(HDF5):
         wells = self.wells()
         samples = self.samples()
 
-        cols = ['Color', 'Well', 'Sample', 'Tonset (°C)', 'Tagg 266 (°C)',
-                'Tagg 473 (°C)']
+        cols = ['color', 'well', 'sample', 't_onset', 't_agg_266', 't_agg_473']
         # Determine how many Tm columns
         tm_cols = []
         for i in self.wells():
             tm_cols = np.append(tm_cols, np.flatnonzero(self.sls_tms(i)))
         max_tm = int(np.max(tm_cols) + 1)
-        cols.extend(['Tm{} (°C)'.format(i + 1) for i in
-                     range(max_tm)])
+        cols.extend(['t_m_{}'.format(i + 1) for i in range(max_tm)])
 
         df = pd.DataFrame(columns = cols)
 
         for i in wells:
-            well_sum = {'Color': self.sls_color(i),
-                        'Well': i,
-                        'Tonset (°C)': self.sls_tonset(i),
-                        'Tagg 266 (°C)': self.sls_tagg266(i),
-                        'Tagg 473 (°C)': self.sls_tagg473(i)}
+            well_sum = {'color': self.sls_color(i),
+                        'well': i,
+                        't_onset': self.sls_tonset(i),
+                        't_agg_266': self.sls_tagg266(i),
+                        't_agg_473': self.sls_tagg473(i)}
 
             sample_index = np.flatnonzero(
                 np.char.find(self.samples(), i) != -1)
-            well_sum['Sample'] = samples[sample_index][0]
+            well_sum['sample'] = samples[sample_index][0]
 
             tms = self.sls_tms(i)
             for j in range(max_tm):
-                well_sum['Tm{} (°C)'.format(j + 1)] = \
+                well_sum['t_m_{}'.format(j + 1)] = \
                     tms[j] if tms[j] != 0 else np.nan
 
             df = df.append(well_sum, ignore_index = True)
@@ -407,11 +405,9 @@ class SLS(HDF5):
         sls_266 = self.sls_266(well)
         sls_473 = self.sls_473(well)
 
-        cols = ['Temperature', 'BCM / nm', 'Temperature', 'SLS 266 nm/Count',
-                'Temperature', 'SLS 473  nm/Count']  # formatting matches file
+        cols = ['temperature', 'bcm', 'sls_266', 'sls_473']
 
-        df = pd.DataFrame(data = [temps, bcm, temps, sls_266,
-                                  temps, sls_473]).T
+        df = pd.DataFrame(data = [temps, bcm, sls_266, sls_473]).T
         df.columns = cols
 
         return df
