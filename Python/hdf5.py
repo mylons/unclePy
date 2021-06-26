@@ -7,6 +7,10 @@ from sqlalchemy import create_engine
 
 
 class HDF5:
+    # TODO insert more assertions for code checking
+    # TODO update variable names to be more descriptive
+    # TODO either add more "examples" or remove some - make more consistent
+
     """
     Generic class to load .uni (HDF5) files
 

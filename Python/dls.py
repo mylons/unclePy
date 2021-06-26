@@ -231,6 +231,7 @@ class DLS(HDF5):
 
     def dls_sum_zave_diff_coeff(self):
         """
+        # TODO put equation in here for reference
         Returns
         -------
         pd.Series
@@ -293,6 +294,7 @@ class DLS(HDF5):
 
     def dls_sum_fit_var(self):
         """
+        TODO: this is not currently correct!
 
         Returns
         -------

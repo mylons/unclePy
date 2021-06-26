@@ -351,8 +351,9 @@ class SLS(HDF5):
         waves = self.sls_wavelengths(well)
         inten = [pd.Series(self.sls_intensity(well, temp)) for temp in temps]
 
+        # NOTE: inconsistent whitespace here is purposeful to match file
         cols = [f'Temp :{temps[i]:02f}, Time:{times[i]:.1f}'
-                for i in range(len(temps))]  # formatting matches file
+                for i in range(len(temps))]
 
         # Transpose due to the way dataframe is compiled
         df = pd.DataFrame(data = inten).T
@@ -559,7 +560,6 @@ class SLS(HDF5):
         None
         """
         df = self.sls_sum()
-        # If uploading raw file, need to append datetime for Rails table
         df['export_type'] = 'summary'
         if datetime_needed:
             df = add_datetime(df)
