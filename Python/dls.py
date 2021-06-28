@@ -33,10 +33,10 @@ class DLS(HDF5):
     dls_sum_temperatures()
         Returns temperatures used for all wells
 
-    dls_sum_zavg_diam(raw, diam)
+    dls_sum_z_avg_diam(raw, diam)
         Returns Z-average diameters/radii for all wells
 
-    dls_sum_zavg_diff_coeff()
+    dls_sum_z_avg_diff_coeff()
         Returns Z-average differential coefficients for all wells
 
     dls_sum_stdev_diam(raw)
@@ -208,7 +208,7 @@ class DLS(HDF5):
                               attrs['Temperature'])
         return pd.Series(temps)
 
-    def dls_sum_zavg_diam(self, raw = True, diam = True):
+    def dls_sum_z_avg_diam(self, raw = True, diam = True):
         """
         Parameters
         ----------
@@ -241,7 +241,7 @@ class DLS(HDF5):
             vals = np.append(vals, val)
         return pd.Series(vals)
 
-    def dls_sum_zavg_diff_coeff(self):
+    def dls_sum_z_avg_diff_coeff(self):
         """
         # TODO put equation in here for reference
         Returns
@@ -251,7 +251,7 @@ class DLS(HDF5):
         """
         abs_temp = convert_temperature(self.dls_sum_temperatures(),
                                        'Celsius', 'Kelvin')  # C to K
-        rad_m = self.dls_sum_zavg_diam(diam = False) / 1000000000  # nm to m
+        rad_m = self.dls_sum_z_avg_diam(diam = False) / 1000000000  # nm to m
         visco = self.dls_sum_viscosity() / 1000  # cP to kg/m-s
         coef = (Boltzmann * abs_temp) / (6 * np.pi * visco * rad_m)
         return coef
@@ -297,10 +297,10 @@ class DLS(HDF5):
         pd.Series
             PDI (polydispersity index) values for all wells
         """
-        zavg_diams = self.dls_sum_zavg_diam(raw = True, diam = True)
+        z_avg_diams = self.dls_sum_z_avg_diam(raw = True, diam = True)
         stdev_diams = self.dls_sum_stdev_diam(raw = True)
         pdis = []
-        for s, z in zip(stdev_diams, zavg_diams):
+        for s, z in zip(stdev_diams, z_avg_diams):
             pdis = np.append(pdis, ((s / z) ** 2))
         return pd.Series(pdis)
 
@@ -616,13 +616,13 @@ class DLS(HDF5):
         """
         data = {
             'well'              : self.wells(),
-            'samples'           : self.samples(),
+            'sample'            : self.samples(),
             'color'             : self.dls_sum_color(),
-            'temperatures'      : self.dls_sum_temperatures(),
-            'zavg_diam'         : self.dls_sum_zavg_diam(raw = False,
-                                                         diam = True),
-            'zavg_diff_coeff'   : self.dls_sum_zavg_diff_coeff(),
-            'stdev_diam'        : self.dls_sum_stdev_diam(raw = False),
+            'temperature'       : self.dls_sum_temperatures(),
+            'z_avg_diameter'    : self.dls_sum_z_avg_diam(raw = False,
+                                                          diam = True),
+            'z_avg_diff_coeff'  : self.dls_sum_z_avg_diff_coeff(),
+            'stdev_diameter'    : self.dls_sum_stdev_diam(raw = False),
             'pdi'               : self.dls_sum_pdi(),
             'fit_var'           : self.dls_sum_fit_var(),
             'intensity'         : self.dls_sum_intensity(),
@@ -631,7 +631,7 @@ class DLS(HDF5):
             'refractive_index'  : self.dls_sum_ri(),
             'derived_intensity' : self.dls_sum_der_intensity(),
             'min_pk_area'       : self.dls_sum_min_pk_area(),
-            'min_rh'            : self.dls_sum_min_rh(),
+            'min_rel_humid'     : self.dls_sum_min_rh(),
         }
 
         # Multiple peaks, therefore below are returned as dataframes
