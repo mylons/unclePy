@@ -398,6 +398,8 @@ class DLS(HDF5):
                     .attrs['Max'].item()
                 diams.setdefault(well, []).append(val)
         df = pd.DataFrame.from_dict(diams, orient = 'index')
+        df = df.rename(columns = {i: 'pk_{}_mode_diameter'.format(i + 1)
+                                  for i in df.columns})
         if diam:
             df = 2 * df
         if not raw:
@@ -442,6 +444,8 @@ class DLS(HDF5):
                 mean = path[peak].attrs['Mean'].item()
                 pk_poly.setdefault(well, []).append(100 * std / mean)
         df = pd.DataFrame.from_dict(pk_poly, orient = 'index')
+        df = df.rename(columns = {i: 'pk_{}_polydispersity'.format(i + 1)
+                                  for i in df.columns})
         return df
 
     def dls_sum_pk_mass(self):
