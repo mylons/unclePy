@@ -615,7 +615,7 @@ class DLS(HDF5):
 
         """
         data = {
-            'wells'             : self.wells(),
+            'well'              : self.wells(),
             'samples'           : self.samples(),
             'color'             : self.dls_sum_color(),
             'temperatures'      : self.dls_sum_temperatures(),
@@ -642,9 +642,9 @@ class DLS(HDF5):
         pk_mass           = self.dls_sum_pk_mass()
 
         df = pd.DataFrame(data)
-        df = df.merge(pk_mode_diam, right_index = True, left_on = 'wells').\
-            merge(pk_est_mw, right_index = True, left_on = 'wells').\
-            merge(pk_polydispersity, right_index = True, left_on = 'wells')
+        df = df.merge(pk_mode_diam, right_index = True, left_on = 'well').\
+            merge(pk_est_mw, right_index = True, left_on = 'well').\
+            merge(pk_polydispersity, right_index = True, left_on = 'well')
         # TODO add mass
 
         return df
@@ -714,6 +714,31 @@ class DLS(HDF5):
                 df = df_to_sql(df, well = well)
                 df.to_sql('uncle_dls', engine, if_exists = 'append',
                           index = False)
+
+    def write_dls_sum_sql(self, username, password, host, database):
+        """
+        Parameters
+        ----------
+        username : str
+            Username for database access (e.g. "postgres")
+        password : str
+            Password for database access (likely none, i.e. empty string: "")
+        host : str
+            Host address for database access (e.g. "ebase-db-c")
+        database : str
+            Database name (e.g. "ebase_dev")
+
+        Returns
+        -------
+        None
+        """
+        df = self.dls_sum()
+        df.name = 'sum'
+        df = df_to_sql(df)
+
+        engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
+            username, password, host, database))
+        df.to_sql('uncle_dls', engine, if_exists = 'append', index = False)
 
 
 def func(x, a, b, c):
