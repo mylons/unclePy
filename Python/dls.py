@@ -30,7 +30,7 @@ class DLS(HDF5):
         *** NOT CURRENTLY IMPLEMENTED ***
         Returns color for single well
 
-    dls_sum_temperature()
+    dls_sum_temperatures()
         Returns temperatures used for all wells
 
     dls_sum_zavg_diam(raw, diam)
@@ -39,7 +39,7 @@ class DLS(HDF5):
     dls_sum_zavg_diff_coeff()
         Returns Z-average differential coefficients for all wells
 
-    dls_sum_sd_diam(raw)
+    dls_sum_stdev_diam(raw)
         Returns standard deviation of diameter for all wells
 
     dls_sum_pdi()
@@ -59,6 +59,10 @@ class DLS(HDF5):
 
     dls_sum_pk_poly()
         Returns polydispersity percentage for all peaks for all wells
+
+    dls_sum_pk_mass()
+        # TODO NEED TO INCORPORATE
+        Returns mass percentage for all peaks for all wells
 
     dls_sum_data_filter()
         Returns filter used for all wells
@@ -166,7 +170,7 @@ class DLS(HDF5):
     # ----------------------------------------------------------------------- #
     # DATA COLLECTION FOR DLS SUMMARY                                         #
     # ----------------------------------------------------------------------- #
-    def dls_sum_color(self, well):
+    def dls_sum_color(self):
         """
         TODO: color is currently blank for all files. Is there ever a value?
 
@@ -179,7 +183,8 @@ class DLS(HDF5):
         -------
         None (because currently not used)
         """
-        return np.nan
+
+        return pd.Series(np.nan)
 
     def dls_sum_temperatures(self):
         """
@@ -248,7 +253,7 @@ class DLS(HDF5):
         coef = (Boltzmann * abs_temp) / (6 * np.pi * visco * rad_m)
         return coef
 
-    def dls_sum_sd_diam(self, raw = True):
+    def dls_sum_stdev_diam(self, raw = True):
         """
         Parameters
         ----------
@@ -290,7 +295,7 @@ class DLS(HDF5):
             PDI (polydispersity index) values for all wells
         """
         zavg_diams = self.dls_sum_zavg_diam(raw = True, diam = True)
-        stdev_diams = self.dls_sum_sd_diam(raw = True)
+        stdev_diams = self.dls_sum_stdev_diam(raw = True)
         pdis = []
         for s, z in zip(stdev_diams, zavg_diams):
             pdis = np.append(pdis, ((s / z) ** 2))
@@ -304,6 +309,8 @@ class DLS(HDF5):
         -------
 
         """
+        return np.nan  # CURRENTLY NOT WORKING
+
         wells = self.wells()
         for well in wells:
             well_num = self.well_name_to_num(well)
@@ -337,7 +344,7 @@ class DLS(HDF5):
 
             print('Well {}: {}'.format(well, amp_fac * del_fac * (sum_of_squares / (len(resid) - 4))))
 
-        return corr_rel, time_rel
+            return corr_rel, time_rel
 
     def dls_sum_intensity(self):
         """
@@ -433,6 +440,14 @@ class DLS(HDF5):
                 pk_poly.setdefault(well, []).append(100 * std / mean)
         df = pd.DataFrame.from_dict(pk_poly, orient = 'index')
         return df
+
+    def dls_sum_pk_mass(self):
+        """
+        Returns
+        -------
+        TODO: need to figure this out ASAP
+        """
+        return pd.Series(np.nan)
 
     def dls_sum_data_filter(self):
         """
