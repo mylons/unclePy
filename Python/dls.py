@@ -210,12 +210,14 @@ class DLS(HDF5):
 
     def dls_sum_z_avg_diam(self, raw = True, diam = True):
         """
+        NOTE: Modified values have upper limit of 1000, therefore any value
+            greater than 1000 will be returned as 1000 if raw = False
+
         Parameters
         ----------
         raw : bool (default = True)
             Return raw or modified values
-            Modified values have upper limit of 1000, therefore any value
-                greater than 1000 will be returned as ">1000"
+            See NOTE above for values greater than 1000
         diam : bool (default = True)
             Return diameters (True) or radii (False)
 
@@ -223,8 +225,6 @@ class DLS(HDF5):
         -------
         pd.Series
             unit: nanometer (nm)
-            If raw values, values are floats
-            If not raw values, values are strings (due to ">1000")
         """
         wells = self.wells()
         vals = []
@@ -237,7 +237,7 @@ class DLS(HDF5):
             if diam:
                 val = val * self.factor
             if not raw and val > 1000:
-                val = '>1000'
+                val = 1000
             vals = np.append(vals, val)
         return pd.Series(vals)
 
@@ -258,19 +258,19 @@ class DLS(HDF5):
 
     def dls_sum_stdev_diam(self, raw = True):
         """
+        NOTE: Modified values have upper limit of 1000, therefore any value
+            greater than 1000 will be returned as 1000 if raw = False
+
         Parameters
         ----------
         raw : bool (default = True)
             Return raw or modified values
-            Modified values have upper limit of 1000, therefore any value
-                greater than 1000 will be returned as ">1000"
+            See NOTE above for values greater than 1000
 
         Returns
         -------
         pd.Series
             unit: nanometer (nm)
-            If raw values, values are floats
-            If not raw values, values are strings (due to ">1000")
         """
         wells = self.wells()
         diams = []
@@ -282,7 +282,7 @@ class DLS(HDF5):
                 .attrs['StdDev']
             diam = radius * self.factor
             if not raw and diam > 1000:
-                diam = '>1000'
+                diam = 1000
             diams = np.append(diams, diam)
         return pd.Series(diams)
 
@@ -369,12 +369,14 @@ class DLS(HDF5):
 
     def dls_sum_pk_mode_diam(self, raw = True, diam = True):
         """
+        NOTE: Modified values have upper limit of 1000, therefore any value
+            greater than 1000 will be returned as 1000 if raw = False
+
         Parameters
         ----------
         raw : bool (default = True)
             Return raw or modified values
-            Modified values have upper limit of 1000, therefore any value
-                greater than 1000 will be returned as ">1000"
+            See NOTE above for values greater than 1000
         diam : bool (default = True)
             Return diameters (True) or radii (False)
 
@@ -403,19 +405,22 @@ class DLS(HDF5):
         if diam:
             df = 2 * df
         if not raw:
-            df[df > 1000] = '>1000'
+            df[df > 1000] = 1000
         return df
 
     def dls_sum_pk_est_mw(self, raw = True):
         """
         NOTE: What is the highest value before "Out of Range"?
               So far, the highest value seen that still displays: 23,983.70
+
+        NOTE: Modified values have upper limit of ????, therefore any value
+            greater than ???? will be returned as -1 if raw = False
+
         Parameters
         ----------
         raw : bool (default = True)
             Return raw or modified values
-            Modified values have upper limit of 1000, therefore any value
-                greater than 1000 will be returned as ">1000"
+            See NOTE above for values greater than ????
 
         Returns
         -------
@@ -428,7 +433,7 @@ class DLS(HDF5):
         rad_df = rad_df.rename(columns = cols)
         mw_df = 2.75 * (rad_df**2.49)
         if not raw:
-            mw_df[mw_df > 25000] = 'Out of Range'  # Adjust accordingly to note above
+            mw_df[mw_df > 25000] = -1  # Adjust accordingly to note above
         return mw_df
 
     def dls_sum_pk_poly(self):
