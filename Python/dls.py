@@ -94,7 +94,10 @@ class DLS(HDF5):
     write_dls_bundle_csv(save_directory)
         Writes 3 files (Intensity, Mass, Correlation) for each well
 
-    write_dls_bundle_sql(self, username, password, host, database)
+    write_dls_sum_sql(username, password, host, database)
+        Saves summary data to PostgreSQL database
+
+    write_dls_bundle_sql(username, password, host, database)
         Saves intensity, mass, correlation data per well to PostgreSQL database
     """
 
