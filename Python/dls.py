@@ -32,10 +32,10 @@ class DLS(HDF5):
     dls_sum_temperature()
         Returns temperatures used for all wells
 
-    dls_sum_zave_diam(raw, diam)
+    dls_sum_zavg_diam(raw, diam)
         Returns Z-average diameters/radii for all wells
 
-    dls_sum_zave_diff_coeff()
+    dls_sum_zavg_diff_coeff()
         Returns Z-average differential coefficients for all wells
 
     dls_sum_sd_diam(raw)
@@ -196,7 +196,7 @@ class DLS(HDF5):
                               attrs['Temperature'])
         return pd.Series(temps)
 
-    def dls_sum_zave_diam(self, raw = True, diam = True):
+    def dls_sum_zavg_diam(self, raw = True, diam = True):
         """
         Parameters
         ----------
@@ -229,7 +229,7 @@ class DLS(HDF5):
             vals = np.append(vals, val)
         return pd.Series(vals)
 
-    def dls_sum_zave_diff_coeff(self):
+    def dls_sum_zavg_diff_coeff(self):
         """
         # TODO put equation in here for reference
         Returns
@@ -239,7 +239,7 @@ class DLS(HDF5):
         """
         abs_temp = convert_temperature(self.dls_sum_temperatures(),
                                        'Celsius', 'Kelvin')  # C to K
-        rad_m = self.dls_sum_zave_diam(diam = False) / 1000000000  # nm to m
+        rad_m = self.dls_sum_zavg_diam(diam = False) / 1000000000  # nm to m
         visco = self.dls_sum_viscosity() / 1000  # cP to kg/m-s
         coef = (Boltzmann * abs_temp) / (6 * np.pi * visco * rad_m)
         return coef
@@ -285,10 +285,10 @@ class DLS(HDF5):
         pd.Series
             PDI (polydispersity index) values for all wells
         """
-        zave_diams = self.dls_sum_zave_diam(raw = True, diam = True)
+        zavg_diams = self.dls_sum_zavg_diam(raw = True, diam = True)
         stdev_diams = self.dls_sum_sd_diam(raw = True)
         pdis = []
-        for s, z in zip(stdev_diams, zave_diams):
+        for s, z in zip(stdev_diams, zavg_diams):
             pdis = np.append(pdis, ((s / z) ** 2))
         return pd.Series(pdis)
 
