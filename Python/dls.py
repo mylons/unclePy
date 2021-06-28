@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy.constants import Boltzmann, convert_temperature
+from sqlalchemy import create_engine
 
 
 class DLS(HDF5):
@@ -85,6 +86,9 @@ class DLS(HDF5):
 
     write_dls_bundle_csv(save_directory)
         Writes 3 files (Intensity, Mass, Correlation) for each well
+
+    write_dls_bundle_sql(self, username, password, host, database)
+        Saves intensity, mass, correlation data per well to PostgreSQL database
     """
 
     def __init__(self, file_path):
@@ -597,6 +601,44 @@ class DLS(HDF5):
                            format(well), index = False)
             corr_df.to_csv(save_directory + '/Correlation-{}-15.csv'.
                            format(well), index = False)
+
+    # ----------------------------------------------------------------------- #
+    # WRITE DATA TO POSTGRESQL                                                #
+    # ----------------------------------------------------------------------- #
+    def write_dls_bundle_sql(self, username, password, host, database):
+        """
+        Parameters
+        ----------
+        username : str
+            Username for database access (e.g. "postgres")
+        password : str
+            Password for database access (likely none, i.e. empty string: "")
+        host : str
+            Host address for database access (e.g. "ebase-db-c")
+        database : str
+            Database name (e.g. "ebase_dev")
+
+        Returns
+        -------
+        None
+        """
+        engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
+            username, password, host, database))
+
+        wells = self.wells()
+        for well in wells:
+            inten_df = self.dls_bundle_intensity(well)
+            mass_df = self.dls_bundle_mass(well)
+            corr_df = self.dls_bundle_correlation(well)
+
+            inten_df.name = 'bundle_intensity'
+            mass_df.name = 'bundle_mass'
+            corr_df.name = 'bundle_correlation'
+
+            for df in [inten_df, mass_df, corr_df]:
+                df = df_to_sql(df, well = well)
+                df.to_sql('uncle_dls', engine, if_exists = 'append',
+                          index = False)
 
 
 def func(x, a, b, c):
