@@ -1,4 +1,4 @@
-from hdf5 import HDF5
+from hdf5 import HDF5, df_to_sql
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt

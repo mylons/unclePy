@@ -286,6 +286,31 @@ class HDF5:
         return samples
 
 
+def df_to_sql(df, well = None):
+    """
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe to be modified for PostgreSQL data table
+    well : str
+
+    well
+    df
+
+    Returns
+    -------
+    pd.DataFrame
+        Modified to fit database structure
+    """
+    df['export_type'] = df.name.split('_')[0]
+    df = add_datetime(df)
+    if well:
+        df['well'] = well
+    if len(df.name.split('_')) == 2:
+        df['dls_data_type'] = df.name.split('_')[1]
+    return df
+
+
 def add_datetime(df):
     """
     Parameters
