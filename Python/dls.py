@@ -410,17 +410,26 @@ class DLS(HDF5):
         """
         NOTE: What is the highest value before "Out of Range"?
               So far, the highest value seen that still displays: 23,983.70
+        Parameters
+        ----------
+        raw : bool (default = True)
+            Return raw or modified values
+            Modified values have upper limit of 1000, therefore any value
+                greater than 1000 will be returned as ">1000"
 
         Returns
         -------
         pd.DataFrame
             Estimated molecular weights for all peaks for all wells
         """
-        rad = self.dls_sum_pk_mode_diam(raw = True, diam = False)
-        mw = 2.75 * (rad**2.49)
+        rad_df = self.dls_sum_pk_mode_diam(raw = True, diam = False)
+        cols = {i: i.replace('mode_diameter', 'est_mw') if 'mode_diameter' in i
+                else i for i in rad_df.columns}
+        rad_df = rad_df.rename(columns = cols)
+        mw_df = 2.75 * (rad_df**2.49)
         if not raw:
-            mw[mw > 25000] = 'Out of Range'  # Adjust accordingly to note above
-        return mw
+            mw_df[mw_df > 25000] = 'Out of Range'  # Adjust accordingly to note above
+        return mw_df
 
     def dls_sum_pk_poly(self):
         """
@@ -627,7 +636,7 @@ class DLS(HDF5):
 
         # Multiple peaks, therefore below are returned as dataframes
         pk_mode_diam      = self.dls_sum_pk_mode_diam(raw = False,
-                                                 diam = True)
+                                                      diam = True)
         pk_est_mw         = self.dls_sum_pk_est_mw(raw = False)
         pk_polydispersity = self.dls_sum_pk_poly()
         pk_mass           = self.dls_sum_pk_mass()
