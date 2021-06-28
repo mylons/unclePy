@@ -96,7 +96,7 @@ class DLS(HDF5):
     # ----------------------------------------------------------------------- #
     # DATA COLLECTION FOR DLS BUNDLE                                          #
     # ----------------------------------------------------------------------- #
-    def dls_intensity(self, well):
+    def dls_bundle_intensity(self, well):
         """
         Parameters
         ----------
@@ -113,11 +113,11 @@ class DLS(HDF5):
             ['DLS0001']['ExperimentAveraged']['AverageCorrelation'] \
             ['Intensity']['Data'][:]
         inten[:, 0] *= self.factor
-        df = pd.DataFrame(inten, columns = ['Hydrodynamic Diameter (nm)',
-                                            'Amplitude'])
+        df = pd.DataFrame(inten, columns = ['hydrodynamic_diameter',
+                                            'amplitude'])
         return df
 
-    def dls_mass(self, well):
+    def dls_bundle_mass(self, well):
         """
         Parameters
         ----------
@@ -134,11 +134,11 @@ class DLS(HDF5):
             ['DLS0001']['ExperimentAveraged']['AverageCorrelation'] \
             ['Mass']['Data'][:]
         mass[:, 0] *= self.factor
-        df = pd.DataFrame(mass, columns = ['Hydrodynamic Diameter (nm)',
-                                           'Amplitude'])
+        df = pd.DataFrame(mass, columns = ['hydrodynamic_diameter',
+                                           'amplitude'])
         return df
 
-    def dls_correlation(self, well):
+    def dls_bundle_correlation(self, well):
         """
         Parameters
         ----------
@@ -156,7 +156,7 @@ class DLS(HDF5):
             ['Correlations'][:]
         # Swap columns to align with typical export
         corr = corr[:, [1, 0]]
-        df = pd.DataFrame(corr, columns = ['Time (s)', 'Amplitude'])
+        df = pd.DataFrame(corr, columns = ['time', 'amplitude'])
         return df
 
     # ----------------------------------------------------------------------- #
@@ -587,9 +587,9 @@ class DLS(HDF5):
         """
         wells = self.wells()
         for well in wells:
-            inten_df = self.dls_intensity(well)
-            mass_df = self.dls_mass(well)
-            corr_df = self.dls_correlation(well)
+            inten_df = self.dls_bundle_intensity(well)
+            mass_df = self.dls_bundle_mass(well)
+            corr_df = self.dls_bundle_correlation(well)
 
             inten_df.to_csv(save_directory + '/Intensity-{}-15.csv'.
                             format(well), index = False)
