@@ -88,6 +88,9 @@ class DLS(HDF5):
     dls_sum_min_rh()
         Returns minimum relative humidity for all wells
 
+    dls_sum()
+        Returns pd.DataFrame of summary for entire experiment
+
     write_dls_bundle_csv(save_directory)
         Writes 3 files (Intensity, Mass, Correlation) for each well
 
@@ -588,6 +591,50 @@ class DLS(HDF5):
                               self.file['Application1']['Run1'][well_num]
                               ['DLS_Data'].attrs['Minimum Rh'])
         return pd.Series(minrh)
+
+    # ----------------------------------------------------------------------- #
+    # DATAFRAME ASSEMBLY                                                      #
+    # ----------------------------------------------------------------------- #
+    def dls_sum(self):
+        """
+        Returns
+        -------
+
+        """
+        data = {
+            'wells'             : self.wells(),
+            'samples'           : self.samples(),
+            'color'             : self.dls_sum_color(),
+            'temperatures'      : self.dls_sum_temperatures(),
+            'zavg_diam'         : self.dls_sum_zavg_diam(raw = False,
+                                                         diam = True),
+            'zavg_diff_coeff'   : self.dls_sum_zavg_diff_coeff(),
+            'stdev_diam'        : self.dls_sum_stdev_diam(raw = False),
+            'pdi'               : self.dls_sum_pdi(),
+            'fit_var'           : self.dls_sum_fit_var(),
+            'intensity'         : self.dls_sum_intensity(),
+            'data_filter'       : self.dls_sum_data_filter(),
+            'viscosity'         : self.dls_sum_viscosity(),
+            'refractive_index'  : self.dls_sum_ri(),
+            'derived_intensity' : self.dls_sum_der_intensity(),
+            'min_pk_area'       : self.dls_sum_min_pk_area(),
+            'min_rh'            : self.dls_sum_min_rh(),
+        }
+
+        # Multiple peaks, therefore below are returned as dataframes
+        pk_mode_diam      = self.dls_sum_pk_mode_diam(raw = False,
+                                                 diam = True)
+        pk_est_mw         = self.dls_sum_pk_est_mw(raw = False)
+        pk_polydispersity = self.dls_sum_pk_poly()
+        pk_mass           = self.dls_sum_pk_mass()
+
+        df = pd.DataFrame(data)
+        df = df.merge(pk_mode_diam, right_index = True, left_on = 'wells').\
+            merge(pk_est_mw, right_index = True, left_on = 'wells').\
+            merge(pk_polydispersity, right_index = True, left_on = 'wells')
+        # TODO add mass
+
+        return df
 
     # ----------------------------------------------------------------------- #
     # WRITE DATA TO CSV                                                       #
