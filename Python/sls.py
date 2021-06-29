@@ -1,4 +1,4 @@
-from hdf5 import HDF5, verify, df_to_sql
+from hdf5 import HDF5, verify
 import pandas as pd
 import numpy as np
 from sqlalchemy import create_engine
@@ -555,12 +555,12 @@ class SLS(HDF5):
         -------
         None
         """
-        df = self.sls_sum()
-        df.name = 'sum'
-        df = df_to_sql(df)
-
         engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
             username, password, host, database))
+
+        df = self.sls_sum()
+        df.name = 'sum'
+        df = self.df_to_sql(df, engine = engine)
         df.to_sql('uncle_sls', engine, if_exists = 'append', index = False)
 
     def write_sls_bundle_sql(self, username, password, host, database):
@@ -587,7 +587,7 @@ class SLS(HDF5):
         for well in wells:
             df = self.sls_bundle(well)
             df.name = 'bundle'
-            df = df_to_sql(df, well = well)
+            df = self.df_to_sql(df, well = well, engine = engine)
 
             # TODO need to grab experiment ID
 

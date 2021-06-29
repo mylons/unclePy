@@ -1,4 +1,4 @@
-from hdf5 import HDF5, df_to_sql
+from hdf5 import HDF5
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -719,7 +719,7 @@ class DLS(HDF5):
             corr_df.name = 'bundle_correlation'
 
             for df in [inten_df, mass_df, corr_df]:
-                df = df_to_sql(df, well = well)
+                df = self.df_to_sql(df, well = well, engine = engine)
                 df.to_sql('uncle_dls', engine, if_exists = 'append',
                           index = False)
 
@@ -740,12 +740,12 @@ class DLS(HDF5):
         -------
         None
         """
-        df = self.dls_sum()
-        df.name = 'sum'
-        df = df_to_sql(df)
-
         engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
             username, password, host, database))
+
+        df = self.dls_sum()
+        df.name = 'sum'
+        df = self.df_to_sql(df, engine = engine)
         df.to_sql('uncle_dls', engine, if_exists = 'append', index = False)
 
 

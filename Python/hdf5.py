@@ -50,12 +50,10 @@ class HDF5:
     exp_plate_side()
         Returns side of plate used in experiment (L/R)
 
-    write_experiment_info_sql(username, password, host, database,
-                              datetime_needed)
+    write_experiment_info_sql(engine, datetime_needed)
         Saves experiment metadata to PostgreSQL database
 
-    write_instrument_info_sql(username, password, host, database,
-                              datetime_needed)
+    write_instrument_info_sql(engine, datetime_needed)
         Saves instrument metadata to PostgreSQL database
 
     wells()
@@ -144,19 +142,29 @@ class HDF5:
         plate_side = re.search(r'\D+$', plate_info)
         return plate_side.group()
 
-    def write_experiment_info_sql(self, username, password, host, database,
-                                  datetime_needed = True):
+    def experiment_exists(self, engine):
+        """
+        Returns
+        -------
+
+        """
+        with engine.connect() as con:
+            exp_id = con.execute("SELECT id FROM uncle_experiments "
+                                 "WHERE name = '{}';".
+                                 format(self.exp_name()))
+            exp_id = exp_id.mappings().all()
+
+        if exp_id:
+            return exp_id[0]['id']
+        else:
+            return False
+
+    def write_experiment_info_sql(self, engine, datetime_needed = True):
         """
         Parameters
         ----------
-        username : str
-            Username for database access (e.g. "postgres")
-        password : str
-            Password for database access (likely none, i.e. empty string: "")
-        host : str
-            Host address for database access (e.g. "ebase-db-c")
-        database : str
-            Database name (e.g. "ebase_dev")
+        engine : sqlalchemy Engine
+            Passed in from calling function. Engine to connect to database.
         datetime_needed : bool (default = True)
             Whether to insert "created_at", "updated_at" columns
             These are necessary for Rails tables
@@ -165,10 +173,6 @@ class HDF5:
         -------
         None
         """
-        # TODO complete this with real info
-        engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
-            username, password, host, database))
-
         with engine.connect() as con:
             inst_id = con.execute("SELECT id FROM uncle_instruments "
                                   "WHERE id = {};".
@@ -202,19 +206,12 @@ class HDF5:
         df.to_sql('uncle_experiments', engine, if_exists = 'append',
                   index = False)
 
-    def write_instrument_info_sql(self, username, password, host, database,
-                                  datetime_needed = True):
+    def write_instrument_info_sql(self, engine, datetime_needed = True):
         """
         Parameters
         ----------
-        username : str
-            Username for database access (e.g. "postgres")
-        password : str
-            Password for database access (likely none, i.e. empty string: "")
-        host : str
-            Host address for database access (e.g. "ebase-db-c")
-        database : str
-            Database name (e.g. "ebase_dev")
+        engine : sqlalchemy Engine
+            Passed in from calling function. Engine to connect to database.
         datetime_needed : bool (default = True)
             Whether to insert "created_at", "updated_at" columns
             These are necessary for Rails tables
@@ -231,11 +228,34 @@ class HDF5:
         df = pd.DataFrame(inst_info)
         if datetime_needed:
             df = add_datetime(df)
-
-        engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
-            username, password, host, database))
         df.to_sql('uncle_instruments', engine, if_exists = 'append',
                   index = False)
+
+    def df_to_sql(self, df, well = None, engine = None):
+        """
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Dataframe to be modified for PostgreSQL data table
+        well : str
+            Single well name, e.g. 'A1'
+        engine : sqlalchemy Engine
+            Passed in from calling function. Engine to connect to database.
+
+        Returns
+        -------
+        pd.DataFrame
+            Modified to fit database structure
+        """
+        df['export_type'] = df.name.split('_')[0]
+        df = add_datetime(df)
+        if well:
+            df['well'] = well
+        if len(df.name.split('_')) == 2:
+            df['dls_data_type'] = df.name.split('_')[1]
+        if engine and self.experiment_exists(engine):
+            df['uncle_experiment_id'] = self.experiment_exists(engine)
+        return df
 
     def wells(self):
         """
@@ -286,31 +306,6 @@ class HDF5:
         return samples
 
 
-def df_to_sql(df, well = None):
-    """
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Dataframe to be modified for PostgreSQL data table
-    well : str
-
-    well
-    df
-
-    Returns
-    -------
-    pd.DataFrame
-        Modified to fit database structure
-    """
-    df['export_type'] = df.name.split('_')[0]
-    df = add_datetime(df)
-    if well:
-        df['well'] = well
-    if len(df.name.split('_')) == 2:
-        df['dls_data_type'] = df.name.split('_')[1]
-    return df
-
-
 def add_datetime(df):
     """
     Parameters
@@ -351,6 +346,7 @@ def verify(value):
 h1 = HDF5('/Users/jmiller/Desktop/UNcle Files/uni files/210602-01-Seq1 Cas9-pH003R.uni')
 h2 = HDF5('/Users/jmiller/Desktop/UNcle Files/uni files/Gen6 uni 1,2,3.uni')
 save_path = '/Users/jmiller/Desktop/UNcle Files/Misc/uncle_out.xlsx'
+engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format('postgres', '', 'localhost', 'ebase_dev'))
 
 """
 Gen6 1,2,3 = 210607-01-T4 RNA Ligase-Gen006L
