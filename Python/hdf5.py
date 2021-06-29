@@ -198,33 +198,53 @@ class HDF5:
         else:
             return False
 
-    def write_experiment_info_sql(self, engine, datetime_needed = True):
+    def exp_instrument_exists(self, engine):
         """
         Parameters
         ----------
         engine : sqlalchemy Engine
             Passed in from calling function. Engine to connect to database.
-        datetime_needed : bool (default = True)
-            Whether to insert "created_at", "updated_at" columns
-            These are necessary for Rails tables
 
         Returns
         -------
-        None
+        int or False
+            int: instrument ID, if it exists
+            False: if experiment instrument does not exist
         """
         with engine.connect() as con:
-            exp_id = con.execute("SELECT id FROM uncle_experiments "
-                                 "WHERE name = {};".
-                                 format(self.exp_name()))
             inst_id = con.execute("SELECT id FROM uncle_instruments "
-                                  "WHERE id = {};".
+                                  "WHERE id = '{}';".
                                   format(self.exp_inst_num()))
+            inst_id = inst_id.mappings().all()
+
+        if inst_id:
+            return inst_id[0]['id']
+        else:
+            return False
+
+    def exp_product_exists(self, engine):
+        """
+        Parameters
+        ----------
+        engine : sqlalchemy Engine
+            Passed in from calling function. Engine to connect to database.
+
+        Returns
+        -------
+        int or False
+            int: product ID, if it exists
+            False: if product does not exist
+        """
+        with engine.connect() as con:
             prod_id = con.execute("SELECT id FROM products "
                                   "WHERE name = '{}';".
                                   format(self.exp_product()))
-            exp_id = exp_id.mappings().all()
-            inst_id = inst_id.mappings().all()
             prod_id = prod_id.mappings().all()
+
+        if prod_id:
+            return prod_id[0]['id']
+        else:
+            return False
 
         if exp_id:
             return
