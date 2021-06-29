@@ -309,6 +309,15 @@ class HDF5:
         -------
         None
         """
+        with engine.connect() as con:
+            inst_id = con.execute("SELECT id FROM uncle_instruments "
+                                  "WHERE id = '{}';".
+                                  format(self.exp_inst_num()))
+            inst_id = inst_id.mappings().all()
+
+        if inst_id:
+            return
+
         # TODO complete this with real info
         inst_info = {'id': [int(self.exp_inst_num())],
                      'name': ['Uncle_01'],
@@ -344,12 +353,12 @@ class HDF5:
         if len(df.name.split('_')) == 2:
             df['dls_data_type'] = df.name.split('_')[1]
 
-        if engine and self.experiment_exists(engine):
-            df['uncle_experiment_id'] = self.experiment_exists(engine)
+        if engine and self.exp_exists(engine):
+            df['uncle_experiment_id'] = self.exp_exists(engine)
         # Write experimental info if it does not exist
-        elif engine and not self.experiment_exists(engine):
-            self.write_experiment_info_sql(engine)
-            df['uncle_experiment_id'] = self.experiment_exists(engine)
+        elif engine and not self.exp_exists(engine):
+            self.write_exp_info_sql(engine)
+            df['uncle_experiment_id'] = self.exp_exists(engine)
 
         return df
 
