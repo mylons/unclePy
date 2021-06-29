@@ -8,7 +8,6 @@ from sqlalchemy import create_engine
 
 class HDF5:
     # TODO insert more assertions for code checking
-    # TODO update variable names to be more descriptive
     # TODO either add more "examples" or remove some - make more consistent
 
     """
@@ -79,6 +78,10 @@ class HDF5:
         """
         run_name = self.file['Application1']['Run1'].attrs['Run Name'].\
             decode('utf-8')
+        assert run_name.count('-') == 3,\
+            'Incorrect file name format. Format should be: ' \
+            'Date (YYMMDD) – Instrument # – Protein Name – ' \
+            'Plate Type/Generation/Side'
         return run_name
 
     def exp_date(self):
@@ -89,6 +92,10 @@ class HDF5:
             Date of experiment
         """
         date = self.exp_name().split('-')[0]
+        assert date.isnumeric(),\
+            'Incorrect date format. Format should be: YYMMDD'
+        assert len(date) == 6,\
+            'Incorrect date format. Format should be: YYMMDD'
         return pd.to_datetime(date, yearfirst = True)
 
     def exp_inst_num(self):
@@ -98,7 +105,10 @@ class HDF5:
         int
             Instrument number used in experiment
         """
-        return int(self.exp_name().split('-')[1])
+        inst_num = self.exp_name().split('-')[1]
+        assert inst_num.isnumeric(),\
+            'Incorrect instrument number format. Format should be: ##'
+        return int(inst_num)
 
     def exp_product(self):
         """
@@ -117,8 +127,10 @@ class HDF5:
             Plate type used in experiment
         """
         plate_info = self.exp_name().split('-')[-1]
-        plate_type = re.search(r'\D+', plate_info)
-        return plate_type.group()
+        plate_type = re.search(r'\D+', plate_info).group()
+        assert plate_type.lower() in ['ph', 'cond', 'gen'],\
+            'Incorrect plate type. Plate type should be one of: pH, cond, gen'
+        return plate_type
 
     def exp_generation(self):
         """
@@ -128,8 +140,10 @@ class HDF5:
             Generation of plate layout used in experiment
         """
         plate_info = self.exp_name().split('-')[-1]
-        plate_gen = re.search(r'\d+', plate_info)
-        return plate_gen.group()
+        plate_gen = re.search(r'\d+', plate_info).group()
+        assert plate_gen.isnumeric(),\
+            'Incorrect experiment generation format. Format should be: ###'
+        return plate_gen
 
     def exp_plate_side(self):
         """
@@ -139,8 +153,10 @@ class HDF5:
             Plate side used in experiment
         """
         plate_info = self.exp_name().split('-')[-1]
-        plate_side = re.search(r'\D+$', plate_info)
-        return plate_side.group()
+        plate_side = re.search(r'\D+$', plate_info).group()
+        assert plate_side.lower() in ['l', 'r'],\
+            'Incorrect plate side. Plate side should be one of: L, R'
+        return plate_side
 
     def experiment_exists(self, engine):
         """
