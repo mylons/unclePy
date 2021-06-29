@@ -49,11 +49,27 @@ class HDF5:
     exp_plate_side()
         Returns side of plate used in experiment (L/R)
 
-    write_experiment_info_sql(engine, datetime_needed)
+    exp_exists(engine)
+        Returns experiment ID if it exists, otherwise returns False
+
+    exp_instrument_exists(engine)
+        Returns instrument ID if it exists, otherwise returns False
+
+    exp_product_exists(engine)
+        Returns product ID if it exists, otherwise returns False
+
+    write_exp_info_sql(engine, datetime_needed)
         Saves experiment metadata to PostgreSQL database
 
     write_instrument_info_sql(engine, datetime_needed)
         Saves instrument metadata to PostgreSQL database
+
+    write_product_info_sql(engine)
+        Saves product info metadata to PostgreSQL database
+
+    df_to_sql(df, well, engine)
+        Returns input dataframe with additional columns added to match
+        associated database tables
 
     wells()
         Returns names of wells used in experiment
@@ -158,11 +174,18 @@ class HDF5:
             'Incorrect plate side. Plate side should be one of: L, R'
         return plate_side
 
-    def experiment_exists(self, engine):
+    def exp_exists(self, engine):
         """
+        Parameters
+        ----------
+        engine : sqlalchemy Engine
+            Passed in from calling function. Engine to connect to database.
+
         Returns
         -------
-
+        int or False
+            int: experiment ID, if it exists
+            False: if experiment does not exist
         """
         with engine.connect() as con:
             exp_id = con.execute("SELECT id FROM uncle_experiments "
