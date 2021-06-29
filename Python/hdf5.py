@@ -329,6 +329,32 @@ class HDF5:
         df.to_sql('uncle_instruments', engine, if_exists = 'append',
                   index = False)
 
+    def write_product_info_sql(self, engine):
+        """
+        Parameters
+        ----------
+        engine : sqlalchemy Engine
+            Passed in from calling function. Engine to connect to database.
+
+        Returns
+        -------
+        None
+        """
+        with engine.connect() as con:
+            prod_id = con.execute("SELECT id FROM products "
+                                  "WHERE name = '{}';".
+                                  format(self.exp_product()))
+            prod_id = prod_id.mappings().all()
+
+        if prod_id:
+            return
+
+        # TODO will these have catalog numbers?
+        prod_info = {'name': [self.exp_product()],
+                     'active': 'true'}
+        df = pd.DataFrame(prod_info)
+        df.to_sql('products', engine, if_exists = 'append', index = False)
+
     def df_to_sql(self, df, well = None, engine = None):
         """
         Parameters
