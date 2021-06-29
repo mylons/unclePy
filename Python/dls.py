@@ -311,11 +311,13 @@ class DLS(HDF5):
         """
         TODO: this is not currently correct!
 
+        Fit Var = (Residuals / (number of points – 4)) * amplitude factor * delay factor
+
         Returns
         -------
 
         """
-        return np.nan  # CURRENTLY NOT WORKING
+        # return np.nan  # CURRENTLY NOT WORKING
 
         wells = self.wells()
         for well in wells:
@@ -330,9 +332,9 @@ class DLS(HDF5):
             time_rel = time[:len(corr_rel)]
 
             popt, pcov = curve_fit(func, time_rel, corr_rel)
-            expected_vals = func(time_rel, popt[0], popt[1], popt[2])
+            expected_vals = func(time_rel, popt[0], popt[1])
 
-            resid = corr_rel - expected_vals
+            resid = expected_vals - corr_rel
             sum_of_squares = np.sum(resid**2)
 
             corr_half = np.max(corr_rel) / 2
@@ -340,17 +342,18 @@ class DLS(HDF5):
 
             corr_half_x = np.argmin(abs(corr_half - corr_rel))
             calc_half_x = np.argmin(abs(calc_half - expected_vals))
-            print('Corr half x: {} | Calc half x: {}'.format(corr_half_x, calc_half_x))
 
-            midpt_diff = abs(time_rel[corr_half_x] - time_rel[calc_half_x])
-            print('Midpt diff: {}'.format(midpt_diff))
+            midpt_diff = np.exp(abs(time_rel[corr_half_x] - time_rel[calc_half_x]))
+
+            print('corr_half_x: {} | calc_half_x: {} | midpt_diff: {}'.format(corr_half_x, calc_half_x, midpt_diff))
 
             del_fac = midpt_diff
             amp_fac = resid[0]
 
-            print('Well {}: {}'.format(well, amp_fac * del_fac * (sum_of_squares / (len(resid) - 4))))
-
-            return corr_rel, time_rel
+            fit_var = (sum_of_squares / (len(resid) - 4)) * amp_fac * del_fac
+            print('Well: {} | SoS: {} | len_resid: {} | amp_fac: {} | del_fac: {} | fit_var: {}'.format(well, sum_of_squares, len(resid), amp_fac, del_fac, fit_var))
+            # print('fit_var: {}'.format(fit_var))
+            # return popt, corr_rel, time_rel, resid
 
     def dls_sum_intensity(self):
         """
@@ -749,19 +752,13 @@ class DLS(HDF5):
         df.to_sql('uncle_dls', engine, if_exists = 'append', index = False)
 
 
-def func(x, a, b, c):
-    # return a / np.exp(b * x) + c  # DOES NOT WORK
-    return a / np.log(b * x) + c
-    # return a * np.log(b * x) + c
-    # return a * np.exp(b * x) + c
-    # return a*x**3 + b*x**2 + c*x + d
-    # return a*x**2 + b*x + c
-    # return a*x + b
+def func(x, a, b):
+    return a * np.exp(b * x)
 
 
 def test_overlay(time_rel, corr_rel):
     popt, pcov = curve_fit(func, time_rel, corr_rel)
-    calc_vals = func(time_rel, popt[0], popt[1], popt[2])
+    calc_vals = func(time_rel, popt[0], popt[1])
     plt.plot(time_rel, corr_rel, time_rel, calc_vals)
     plt.show()
 
