@@ -246,18 +246,41 @@ class HDF5:
         else:
             return False
 
+    def write_exp_info_sql(self, engine, datetime_needed = True):
+        """
+        Parameters
+        ----------
+        engine : sqlalchemy Engine
+            Passed in from calling function. Engine to connect to database.
+        datetime_needed : bool (default = True)
+            Whether to insert "created_at", "updated_at" columns
+            These are necessary for Rails tables
+
+        Returns
+        -------
+        None
+        """
+        with engine.connect() as con:
+            exp_id = con.execute("SELECT id FROM uncle_experiments "
+                                 "WHERE name = '{}';".
+                                 format(self.exp_name()))
+            exp_id = exp_id.mappings().all()
         if exp_id:
             return
 
-        if inst_id:
-            inst_id = inst_id[0]['id']
-        else:
-            inst_id = None
+        if self.exp_instrument_exists(engine):
+            inst_id = self.exp_instrument_exists(engine)
+        # Write instrument info if it does not exist
+        elif not self.exp_instrument_exists(engine):
+            self.write_instrument_info_sql(engine)
+            inst_id = self.exp_instrument_exists(engine)
 
-        if prod_id:
-            prod_id = prod_id[0]['id']
-        else:
-            prod_id = None
+        if self.exp_product_exists(engine):
+            prod_id = self.exp_product_exists(engine)
+        # Write product info if it does not exist
+        elif not self.exp_product_exists(engine):
+            self.write_product_info_sql(engine)
+            prod_id = self.exp_product_exists(engine)
 
         exp_info = {'name': [self.exp_name()],
                     'date': [self.exp_date()],
