@@ -174,23 +174,30 @@ class HDF5:
         None
         """
         with engine.connect() as con:
+            exp_id = con.execute("SELECT id FROM uncle_experiments "
+                                 "WHERE name = {};".
+                                 format(self.exp_name()))
             inst_id = con.execute("SELECT id FROM uncle_instruments "
                                   "WHERE id = {};".
                                   format(self.exp_inst_num()))
             prod_id = con.execute("SELECT id FROM products "
                                   "WHERE name = '{}';".
                                   format(self.exp_product()))
+            exp_id = exp_id.mappings().all()
+            inst_id = inst_id.mappings().all()
+            prod_id = prod_id.mappings().all()
 
-        # TODO what to do if instrument/product do not exist?
+        if exp_id:
+            return
 
-        try:
-            inst_id = inst_id.mappings().all()[0]['id']
-        except (TypeError, AttributeError, IndexError):
+        if inst_id:
+            inst_id = inst_id[0]['id']
+        else:
             inst_id = None
 
-        try:
-            prod_id = prod_id.mappings().all()[0]['id']
-        except (TypeError, AttributeError, IndexError):
+        if prod_id:
+            prod_id = prod_id[0]['id']
+        else:
             prod_id = None
 
         exp_info = {'name': [self.exp_name()],
@@ -251,10 +258,17 @@ class HDF5:
         df = add_datetime(df)
         if well:
             df['well'] = well
+
         if len(df.name.split('_')) == 2:
             df['dls_data_type'] = df.name.split('_')[1]
+
         if engine and self.experiment_exists(engine):
             df['uncle_experiment_id'] = self.experiment_exists(engine)
+        # Write experimental info if it does not exist
+        elif engine and not self.experiment_exists(engine):
+            self.write_experiment_info_sql(engine)
+            df['uncle_experiment_id'] = self.experiment_exists(engine)
+
         return df
 
     def wells(self):
