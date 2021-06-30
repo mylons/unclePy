@@ -588,9 +588,6 @@ class SLS(HDF5):
             df = self.sls_bundle(well)
             df.name = 'bundle'
             df = self.df_to_sql(df, well = well, engine = engine)
-
-            # TODO need to grab experiment ID
-
             df.to_sql('uncle_sls', engine, if_exists = 'append', index = False)
 
 

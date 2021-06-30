@@ -246,7 +246,15 @@ class DLS(HDF5):
 
     def dls_sum_z_avg_diff_coeff(self):
         """
-        # TODO put equation in here for reference
+        Uses Stokes-Einstein equation:
+
+        D = (k * T) / (6 * π * η * r)
+
+            k = Boltzmann's constant
+            T = absolute temperature
+            η = dynamic viscosity
+            r = radius of particle
+
         Returns
         -------
         pd.Series
