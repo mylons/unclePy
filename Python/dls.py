@@ -335,7 +335,7 @@ class DLS(HDF5):
                 ['AverageCorrelation']['Correlations'][:]
             corr = corr_data[:, 0]
             time = corr_data[:, 1]
-            min_corr = np.max(corr) / 100
+            min_corr = np.max(corr) / 1000
             corr_rel = corr[corr > min_corr]  # TODO arbitrary cutoff here
             time_rel = time[:len(corr_rel)]
 
