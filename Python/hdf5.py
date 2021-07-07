@@ -82,8 +82,9 @@ class HDF5:
         Returns sample names/descriptions
 
     """
-    def __init__(self, file_path):
+    def __init__(self, file_path, uncle_experiment_id):
         self.file = h5py.File(file_path, 'r')
+        self.uncle_experiment_id = uncle_experiment_id
 
     def exp_name(self):
         """
@@ -176,6 +177,9 @@ class HDF5:
 
     def exp_exists(self, engine):
         """
+        NOTE: This checks if the name of the experiment already exists
+              It does not make any checks on the experiment ID
+
         Parameters
         ----------
         engine : sqlalchemy Engine

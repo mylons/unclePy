@@ -86,6 +86,9 @@ class SLS(HDF5):
         to PostgreSQL database
     """
 
+    def __init__(self, file_path, uncle_experiment_id):
+        super().__init__(file_path, uncle_experiment_id)
+
     # ----------------------------------------------------------------------- #
     # GENERIC DATA COLLECTION                                                 #
     # ----------------------------------------------------------------------- #

@@ -5,15 +5,17 @@ import argparse
 
 parser = argparse.ArgumentParser(description = 'Parse .uni file')
 parser.add_argument('uni_file',
-                    metavar = 'File Path',
                     help = 'Path to .uni file',
                     type = str)
+parser.add_argument('uncle_experiment_id',
+                    help = 'Database ID for Uncle experiment',
+                    type = int)
 
 args = parser.parse_args()
 
 if __name__ == '__main__':
-    sls = SLS(args.uni_file)
-    dls = DLS(args.uni_file)
+    sls = SLS(args.uni_file, args.uncle_experiment_id)
+    dls = DLS(args.uni_file, args.uncle_experiment_id)
 
     dls.write_dls_bundle_sql('postgres', '', 'localhost', 'ebase_dev')
     dls.write_dls_sum_sql('postgres', '', 'localhost', 'ebase_dev')

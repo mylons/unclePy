@@ -101,8 +101,8 @@ class DLS(HDF5):
         Saves intensity, mass, correlation data per well to PostgreSQL database
     """
 
-    def __init__(self, file_path):
-        super().__init__(file_path)
+    def __init__(self, file_path, uncle_experiment_id):
+        super().__init__(file_path, uncle_experiment_id)
         # Hydrodynamic diameter is consistently 2x values found in .uni file
         # Is this possibly because values are radii and export is diameter?
         self.factor = 2
