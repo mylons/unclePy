@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import re
 from datetime import datetime
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, update
 
 
 class HDF5:
@@ -296,8 +296,31 @@ class HDF5:
         df = pd.DataFrame(exp_info)
         if datetime_needed:
             df = add_datetime(df)
-        df.to_sql('uncle_experiments', engine, if_exists = 'append',
-                  index = False)
+        update_params = df.to_dict('records')[0]
+
+        with engine.connect() as con:
+            con.execute("UPDATE uncle_experiments SET "
+                        "name = '{}',"
+                        "date = '{}',"
+                        "uncle_instrument_id = '{}',"
+                        "product_id = '{}',"
+                        "exp_type = '{}',"
+                        "plate_generation = '{}',"
+                        "plate_side = '{}',"
+                        "created_at = '{}',"
+                        "updated_at = '{}'"
+                        "WHERE id = {};".format(
+                            update_params['name'],
+                            update_params['date'],
+                            update_params['uncle_instrument_id'],
+                            update_params['product_id'],
+                            update_params['exp_type'],
+                            update_params['plate_generation'],
+                            update_params['plate_side'],
+                            update_params['created_at'],
+                            update_params['updated_at'],
+                            self.uncle_experiment_id
+                        ))
 
     def write_instrument_info_sql(self, engine, datetime_needed = True):
         """
