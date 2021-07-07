@@ -594,6 +594,8 @@ class SLS(HDF5):
             df.to_sql('uncle_sls', engine, if_exists = 'append', index = False)
 
 
+"""
 h5 = SLS('/Users/jmiller/Desktop/UNcle Files/uni files/210602-01-Seq1 Cas9-pH003R.uni')
 h6 = SLS('/Users/jmiller/Desktop/UNcle Files/uni files/Gen6 uni 1,2,3.uni')
 save_path = '/Users/jmiller/Desktop/UNcle Files/Misc/'
+"""

@@ -180,11 +180,6 @@ class DLS(HDF5):
         """
         TODO: color is currently blank for all files. Is there ever a value?
 
-        Parameters
-        ----------
-        well : str
-            Single well name, e.g. 'A1'
-
         Returns
         -------
         None (because currently not used)
@@ -771,6 +766,8 @@ def test_overlay(time_rel, corr_rel):
     plt.show()
 
 
+"""
 h3 = DLS('/Users/jmiller/Desktop/UNcle Files/uni files/210602-01-Seq1 Cas9-pH003R.uni')
 h4 = DLS('/Users/jmiller/Desktop/UNcle Files/uni files/Gen6 uni 1,2,3.uni')
 save_directory = '/Users/jmiller/Desktop/UNcle Files/Misc/'
+"""
