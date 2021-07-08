@@ -788,10 +788,16 @@ def func(x, a, b):
     return a * np.exp(b * x)
 
 
-def test_overlay(time_rel, corr_rel):
-    popt, pcov = curve_fit(func, time_rel, corr_rel)
+def test_overlay(time_rel, true_values, residuals = None):
+    popt, pcov = curve_fit(func, time_rel, true_values)
     calc_vals = func(time_rel, popt[0], popt[1])
-    plt.plot(time_rel, corr_rel, time_rel, calc_vals)
+    fig, ax1 = plt.subplots()
+    if residuals is not None:
+        ax1.plot(time_rel, true_values, time_rel, calc_vals)
+        ax2 = ax1.twinx()
+        ax2.plot(time_rel, residuals, 'r-.')
+    else:
+        ax1.plot(time_rel, true_values, time_rel, calc_vals)
     plt.show()
 
 
