@@ -26,8 +26,8 @@ class DLS(HDF5):
     dls_correlation(well)
         Returns correlation time and amplitude for single well
 
-    dls_sum_color(well)
-        Returns color for single well
+    dls_sum_color()
+        *** Not currently implemented ***
 
     dls_sum_temperatures()
         Returns temperatures used for all wells
@@ -175,7 +175,8 @@ class DLS(HDF5):
     # ----------------------------------------------------------------------- #
     # DATA COLLECTION FOR DLS SUMMARY                                         #
     # ----------------------------------------------------------------------- #
-    def dls_sum_color(self):
+    @staticmethod
+    def dls_sum_color():
         """
         NOTE: Datasets have not included this yet, therefore unable to locate
               where it is captured in .uni file.

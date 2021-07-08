@@ -17,38 +17,37 @@ class SLS(HDF5):
     sls_temperatures(well)
         Returns temperatures used for single well
 
-    sls_times(well)
+    sls_spec_times(well)
         Returns times used for single well
 
-    sls_wavelengths(well)
+    sls_spec_wavelengths(well)
         Returns wavelengths used for single well
 
-    sls_intensity(well, temp)
+    sls_spec_intensity(well, temp)
         Returns intensities found at a single temperature for single well
 
-    sls_color(well)
-        *** NOT CURRENTLY IMPLEMENTED ***
-        Returns color for single well
+    sls_sum_color()
+        *** Not currently implemented ***
 
-    sls_tms(well)
+    sls_sum_tms(well)
         Returns all TM values for single well
 
-    sls_tonset(well)
+    sls_sum_tonset(well)
         Returns T_onset value for single well
 
-    sls_tagg266(well)
+    sls_sum_tagg266(well)
         Returns T_agg 266 for single well
 
-    sls_tagg473(well)
+    sls_sum_tagg473(well)
         Returns T_agg 473 for single well
 
-    sls_bcm(well)
+    sls_bundle_bcm(well)
         Returns BCM/nm at all temperatures for single well
 
-    sls_266(well)
+    sls_bundle_266(well)
         Returns SLS 266 nm/Count at all temperatures for single well
 
-    sls_473(well)
+    sls_bundle_473(well)
         Returns SLS 473 nm/Count at all temperatures for single well
 
     sls_spec_well(well)
@@ -139,7 +138,7 @@ class SLS(HDF5):
     # ----------------------------------------------------------------------- #
     # DATA COLLECTION FOR SLS SPEC                                            #
     # ----------------------------------------------------------------------- #
-    def sls_wavelengths(self, well):
+    def sls_spec_wavelengths(self, well):
         """
         Parameters
         ----------
@@ -153,10 +152,10 @@ class SLS(HDF5):
         """
         well_num = self.well_name_to_num(well)
         wavelengths = self.file['Application1']['Run1'][well_num] \
-                          ['Fluor_SLS_Data']['CorrectedSpectra']['0001'][:, 0]
+            ['Fluor_SLS_Data']['CorrectedSpectra']['0001'][:, 0]
         return wavelengths
 
-    def sls_intensity(self, well, temp):
+    def sls_spec_intensity(self, well, temp):
         """
         Parameters
         ----------
@@ -182,29 +181,26 @@ class SLS(HDF5):
 
         # Assert we are looking at correct well, temp, etc.
         np.testing.assert_array_equal(inten_meas[:, 0],
-                                      self.sls_wavelengths(well))
+                                      self.sls_spec_wavelengths(well))
 
         return inten_meas[:, 1]
 
     # ----------------------------------------------------------------------- #
     # DATA COLLECTION FOR SLS SUMMARY                                         #
     # ----------------------------------------------------------------------- #
-    def sls_color(self, well):
+    @staticmethod
+    def sls_sum_color():
         """
-        TODO: color is currently blank for all files. Is there ever a value?
-
-        Parameters
-        ----------
-        well : str
-            Single well name, e.g. 'A1'
+        NOTE: Datasets have not included this yet, therefore unable to locate
+              where it is captured in .uni file.
 
         Returns
         -------
-        None (because currently not used)
+        np.nan
         """
-        return np.nan
+        return pd.Series(np.nan)
 
-    def sls_tms(self, well):
+    def sls_sum_tms(self, well):
         """
         Parameters
         ----------
@@ -225,7 +221,7 @@ class SLS(HDF5):
             ['Fluor_SLS_Data']['Analysis']['Tms'][0]
         return tms
 
-    def sls_tonset(self, well):
+    def sls_sum_tonset(self, well):
         """
         Parameters
         ----------
@@ -243,7 +239,7 @@ class SLS(HDF5):
         tonset = verify(tonset)
         return tonset
 
-    def sls_tagg266(self, well):
+    def sls_sum_tagg266(self, well):
         """
         Parameters
         ----------
@@ -261,7 +257,7 @@ class SLS(HDF5):
         tagg266 = verify(tagg266)
         return tagg266
 
-    def sls_tagg473(self, well):
+    def sls_sum_tagg473(self, well):
         """
         Parameters
         ----------
@@ -282,7 +278,7 @@ class SLS(HDF5):
     # ----------------------------------------------------------------------- #
     # DATA COLLECTION FOR SLS EXPORT                                          #
     # ----------------------------------------------------------------------- #
-    def sls_bcm(self, well):
+    def sls_export_bcm(self, well):
         """
         Parameters
         ----------
@@ -299,7 +295,7 @@ class SLS(HDF5):
             ['Fluor_SLS_Data']['Analysis']['BCM'][:]
         return bcm
 
-    def sls_266(self, well):
+    def sls_export_266(self, well):
         """
         Parameters
         ----------
@@ -316,7 +312,7 @@ class SLS(HDF5):
             ['Fluor_SLS_Data']['Analysis']['SLS266'][:]
         return sls_266
 
-    def sls_473(self, well):
+    def sls_export_473(self, well):
         """
         Parameters
         ----------
@@ -351,8 +347,9 @@ class SLS(HDF5):
         """
         temps = self.sls_temperatures(well)
         times = self.sls_times(well)
-        waves = self.sls_wavelengths(well)
-        inten = [pd.Series(self.sls_intensity(well, temp)) for temp in temps]
+        waves = self.sls_spec_wavelengths(well)
+        inten = [pd.Series(self.sls_spec_intensity(well, temp))
+                 for temp in temps]
 
         # NOTE: inconsistent whitespace here is purposeful to match file
         cols = [f'Temp :{temps[i]:02f}, Time:{times[i]:.1f}'
@@ -380,24 +377,24 @@ class SLS(HDF5):
         # Determine how many Tm columns
         tm_cols = []
         for i in self.wells():
-            tm_cols = np.append(tm_cols, np.flatnonzero(self.sls_tms(i)))
+            tm_cols = np.append(tm_cols, np.flatnonzero(self.sls_sum_tms(i)))
         max_tm = int(np.max(tm_cols) + 1)
         cols.extend(['t_m_{}'.format(i + 1) for i in range(max_tm)])
 
         df = pd.DataFrame(columns = cols)
 
         for i in wells:
-            well_sum = {'color': self.sls_color(i),
+            well_sum = {'color': self.sls_sum_color(),
                         'well': i,
-                        't_onset': self.sls_tonset(i),
-                        't_agg_266': self.sls_tagg266(i),
-                        't_agg_473': self.sls_tagg473(i)}
+                        't_onset': self.sls_sum_tonset(i),
+                        't_agg_266': self.sls_sum_tagg266(i),
+                        't_agg_473': self.sls_sum_tagg473(i)}
 
             sample_index = np.flatnonzero(
                 np.char.find(self.samples(), i) != -1)
             well_sum['sample'] = samples[sample_index][0]
 
-            tms = self.sls_tms(i)
+            tms = self.sls_sum_tms(i)
             for j in range(max_tm):
                 well_sum['t_m_{}'.format(j + 1)] = \
                     tms[j] if tms[j] != 0 else np.nan
@@ -421,9 +418,9 @@ class SLS(HDF5):
             This is comparable to an Excel tab for one well, e.g. 'A1'
         """
         temps = self.sls_temperatures(well)
-        bcm = self.sls_bcm(well)
-        sls_266 = self.sls_266(well)
-        sls_473 = self.sls_473(well)
+        bcm = self.sls_export_bcm(well)
+        sls_266 = self.sls_export_266(well)
+        sls_473 = self.sls_export_473(well)
 
         cols = ['temperature', 'bcm', 'sls_266', 'sls_473']
 
