@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy.constants import Boltzmann, convert_temperature
 from sqlalchemy import create_engine
+from sklearn.metrics import mean_squared_error
 
 
 class DLS(HDF5):
@@ -44,8 +45,15 @@ class DLS(HDF5):
     dls_sum_pdi()
         Returns polydispersity index for all wells
 
-    dls_sum_fit_var()
-        # TODO need to incorporate
+    dls_sum_correlation_values(for_plotting)
+        Returns experimental and expected values from correlation data/fit
+        for all wells. Optionally returns time points used for plotting.
+
+    dls_sum_residuals()
+        Returns residuals of correlation plot fit for all wells.
+
+    dls_sum_rmse(mse)
+        Returns (root) mean squared error
 
     dls_sum_intensity()
         Returns intensities for all wells
@@ -310,19 +318,17 @@ class DLS(HDF5):
             pdis = np.append(pdis, ((s / z) ** 2))
         return pd.Series(pdis)
 
-    def dls_sum_residuals(self):
+    def dls_sum_correlation_values(self, for_plotting = False):
         """
-        NOTE: Exported files use a value called "Fit Var". It was instead
-              decided to use RMSE as the measure of fit.
-
-        Fit Var =
-        (Residuals / (number of points – 4)) * amplitude factor * delay factor
-
         Returns
         -------
-
+        np.array
+            Experimental (true) values,
+            Expected (predicated) values,
+            (Optional: time points)
         """
         wells = self.wells()
+        values = []
         for well in wells:
             well_num = self.well_name_to_num(well)
             corr_data = self.file['Application1']['Run1'][well_num] \
@@ -330,33 +336,56 @@ class DLS(HDF5):
                 ['AverageCorrelation']['Correlations'][:]
             corr = corr_data[:, 0]
             time = corr_data[:, 1]
-            min_corr = np.max(corr) / 1000
-            corr_rel = corr[corr > min_corr]  # TODO arbitrary cutoff here
-            time_rel = time[:len(corr_rel)]
+            min_of_corr = np.max(corr) / 100  # arbitrary cutoff: 1% of max
+            # Assumption: amplitude is never >1% of max after it goes below
+            true_values = corr[corr > min_of_corr]
+            time_rel = time[:len(true_values)]
 
-            popt, pcov = curve_fit(func, time_rel, corr_rel)
-            expected_vals = func(time_rel, popt[0], popt[1])
+            popt, pcov = curve_fit(func, time_rel, true_values)
+            predicated_values = func(time_rel, popt[0], popt[1])
+            if for_plotting:
+                values.append([true_values, predicated_values, time_rel])
+            else:
+                values.append([true_values, predicated_values])
+        return np.array(values, dtype = object)
 
-            resid = expected_vals - corr_rel
-            sum_of_squares = np.sum(resid**2)
+    def dls_sum_residuals(self):
+        """
+        Returns
+        -------
+        np.array
+            Residuals for correlation fit for all wells
+        """
+        true_predicted_values = self.dls_sum_correlation_values()
+        resid = []
+        for i in true_predicted_values:
+            np.append(resid, i[1] - i[0])
+        return np.array(resid)
 
-            corr_half = np.max(corr_rel) / 2
-            calc_half = np.max(expected_vals) / 2
+    def dls_sum_rmse(self, mse = False):
+        """
+        NOTE: Exported files use a value called "Fit Var". It was instead
+              decided to use RMSE as the measure of fit.
 
-            corr_half_x = np.argmin(abs(corr_half - corr_rel))
-            calc_half_x = np.argmin(abs(calc_half - expected_vals))
+        Fit Var =
+        (Residuals / (number of points – 4)) * amplitude factor * delay factor
 
-            midpt_diff = np.exp(abs(time_rel[corr_half_x] - time_rel[calc_half_x]))
+        Parameters
+        ----------
+        mse : bool (Default = False)
+            Root mean square error (False) or mean square error (True)
 
-            print('corr_half_x: {} | calc_half_x: {} | midpt_diff: {}'.format(corr_half_x, calc_half_x, midpt_diff))
-
-            del_fac = midpt_diff
-            amp_fac = resid[0]
-
-            fit_var = (sum_of_squares / (len(resid) - 4)) * amp_fac * del_fac
-            print('Well: {} | SoS: {} | len_resid: {} | amp_fac: {} | del_fac: {} | fit_var: {}'.format(well, sum_of_squares, len(resid), amp_fac, del_fac, fit_var))
-            # print('fit_var: {}'.format(fit_var))
-            # return popt, corr_rel, time_rel, resid
+        Returns
+        -------
+        np.array
+            Root mean squared errors for correlation fit for all wells
+        """
+        true_predicted_values = self.dls_sum_correlation_values()
+        # true_values, predicted_values
+        rmse = []
+        for i in true_predicted_values:
+            np.append(rmse, mean_squared_error(i[0], i[1], squared = mse))
+        return rmse
 
     def dls_sum_intensity(self):
         """
