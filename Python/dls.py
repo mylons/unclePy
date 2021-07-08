@@ -27,7 +27,6 @@ class DLS(HDF5):
         Returns correlation time and amplitude for single well
 
     dls_sum_color(well)
-        *** NOT CURRENTLY IMPLEMENTED ***
         Returns color for single well
 
     dls_sum_temperatures()
@@ -178,13 +177,13 @@ class DLS(HDF5):
     # ----------------------------------------------------------------------- #
     def dls_sum_color(self):
         """
-        TODO: color is currently blank for all files. Is there ever a value?
+        NOTE: Datasets have not included this yet, therefore unable to locate
+              where it is captured in .uni file.
 
         Returns
         -------
-        None (because currently not used)
+        np.nan
         """
-
         return pd.Series(np.nan)
 
     def dls_sum_temperatures(self):
@@ -310,18 +309,18 @@ class DLS(HDF5):
             pdis = np.append(pdis, ((s / z) ** 2))
         return pd.Series(pdis)
 
-    def dls_sum_fit_var(self):
+    def dls_sum_residuals(self):
         """
-        TODO: this is not currently correct!
+        NOTE: Exported files use a value called "Fit Var". It was instead
+              decided to use RMSE as the measure of fit.
 
-        Fit Var = (Residuals / (number of points – 4)) * amplitude factor * delay factor
+        Fit Var =
+        (Residuals / (number of points – 4)) * amplitude factor * delay factor
 
         Returns
         -------
 
         """
-        # return np.nan  # CURRENTLY NOT WORKING
-
         wells = self.wells()
         for well in wells:
             well_num = self.well_name_to_num(well)
