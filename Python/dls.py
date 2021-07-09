@@ -358,8 +358,9 @@ class DLS(HDF5):
         true_predicted_values = self.dls_sum_correlation_values()
         resid = []
         for i in true_predicted_values:
-            np.append(resid, i[1] - i[0])
-        return np.array(resid)
+            diff = i[1] - i[0]
+            resid.append(diff.tolist())
+        return resid
 
     def dls_sum_rmse(self, mse = False):
         """
