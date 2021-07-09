@@ -192,7 +192,7 @@ class DLS(HDF5):
         -------
         np.nan
         """
-        return pd.Series(np.nan)
+        return np.nan
 
     def dls_sum_temperatures(self):
         """

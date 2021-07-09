@@ -198,7 +198,7 @@ class SLS(HDF5):
         -------
         np.nan
         """
-        return pd.Series(np.nan)
+        return np.nan
 
     def sls_sum_tms(self, well):
         """
