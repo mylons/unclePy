@@ -68,7 +68,6 @@ class DLS(HDF5):
         Returns polydispersity percentage for all peaks for all wells
 
     dls_sum_pk_mass()
-        # TODO NEED TO INCORPORATE
         Returns mass percentage for all peaks for all wells
 
     dls_sum_data_filter()
@@ -384,7 +383,8 @@ class DLS(HDF5):
         # true_values, predicted_values
         rmse = []
         for i in true_predicted_values:
-            np.append(rmse, mean_squared_error(i[0], i[1], squared = mse))
+            rmse = np.append(rmse,
+                             mean_squared_error(i[0], i[1], squared = mse))
         return rmse
 
     def dls_sum_intensity(self):
