@@ -202,6 +202,20 @@ class HDF5:
         else:
             return False
 
+    def exp_confirm_created(self, engine):
+        """
+
+        Returns
+        -------
+
+        """
+        with engine.connect() as con:
+            exp = con.execute("SELECT id FROM uncle_experiments "
+                              "WHERE id = '{}';".
+                              format(self.uncle_experiment_id))
+            exp = exp.mappings().all()
+        return True if exp else False
+
     def exp_instrument_exists(self, engine):
         """
         Parameters
