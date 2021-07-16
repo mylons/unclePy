@@ -360,6 +360,7 @@ class HDF5:
             return
 
         # TODO complete this with real info
+
         inst_info = {'id': [int(self.exp_inst_num())],
                      'name': ['Uncle_01'],
                      'location': ['Shnider/Hough lab'],
@@ -391,6 +392,7 @@ class HDF5:
             return
 
         # TODO will these have catalog numbers?
+
         prod_info = {'name': [self.exp_product()],
                      'active': 'true'}
         df = pd.DataFrame(prod_info)

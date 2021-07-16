@@ -690,6 +690,7 @@ class DLS(HDF5):
         df = df.merge(pk_mode_diam, right_index = True, left_on = 'well').\
             merge(pk_est_mw, right_index = True, left_on = 'well').\
             merge(pk_polydispersity, right_index = True, left_on = 'well')
+
         # TODO add mass
 
         return df
