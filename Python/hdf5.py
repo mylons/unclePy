@@ -293,7 +293,7 @@ class HDF5:
         with engine.connect() as con:
             exp_id = con.execute("SELECT id FROM uncle_experiments "
                                  "WHERE name = '{}';".
-                                 format(self.exp_file_name()))
+                                 format(self.exp_name()))
             exp_id = exp_id.mappings().all()
         if exp_id:
             return
@@ -312,7 +312,7 @@ class HDF5:
             self.write_product_info_sql(engine)
             prod_id = self.exp_product_exists(engine)
 
-        exp_info = {'name': [self.exp_file_name()],
+        exp_info = {'name': [self.exp_name()],
                     'date': [self.exp_date()],
                     'uncle_instrument_id': inst_id,
                     'product_id': prod_id,
