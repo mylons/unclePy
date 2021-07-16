@@ -495,7 +495,7 @@ class SLS(HDF5):
         None
         """
         df = self.sls_sum()
-        run_name = self.exp_name()
+        run_name = self.exp_file_name()
         df.to_csv('{}/{}-SLS Sum.csv'.format(save_path, run_name),
                   index = False)
 
@@ -528,7 +528,7 @@ class SLS(HDF5):
         None
         """
         wells = self.wells()
-        run_name = self.exp_name()
+        run_name = self.exp_file_name()
         for well in wells:
             df = self.sls_bundle(well)
             df.to_csv('{}/{}-SLS Bundle-{}.csv'.format(save_path,

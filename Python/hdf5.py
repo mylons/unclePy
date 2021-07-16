@@ -28,7 +28,10 @@ class HDF5:
 
     Methods
     -------
-    run_name()
+    exp_file_name()
+        Returns name of file associated with experiment
+
+    exp_name
         Returns name of experimental run
 
     exp_date()
@@ -86,7 +89,7 @@ class HDF5:
         self.file = h5py.File(file_path, 'r')
         self.uncle_experiment_id = uncle_experiment_id
 
-    def exp_name(self):
+    def exp_file_name(self):
         """
         Returns
         -------
@@ -101,6 +104,15 @@ class HDF5:
             'Plate Type/Generation/Side'
         return run_name
 
+    def exp_name(self):
+        """
+        Returns
+        -------
+        str
+            Name of experiment - same as file name without plate side
+        """
+        return self.exp_file_name()[:-1]
+
     def exp_date(self):
         """
         Returns
@@ -108,7 +120,7 @@ class HDF5:
         pd.Timestamp
             Date of experiment
         """
-        date = self.exp_name().split('-')[0]
+        date = self.exp_file_name().split('-')[0]
         assert date.isnumeric(),\
             'Incorrect date format. Format should be: YYMMDD'
         assert len(date) == 6,\
@@ -122,7 +134,7 @@ class HDF5:
         int
             Instrument number used in experiment
         """
-        inst_num = self.exp_name().split('-')[1]
+        inst_num = self.exp_file_name().split('-')[1]
         assert inst_num.isnumeric(),\
             'Incorrect instrument number format. Format should be: ##'
         return int(inst_num)
@@ -134,7 +146,7 @@ class HDF5:
         str
             Product used in experiment
         """
-        return self.exp_name().split('-')[2]
+        return self.exp_file_name().split('-')[2]
 
     def exp_plate_type(self):
         """
@@ -143,7 +155,7 @@ class HDF5:
         str
             Plate type used in experiment
         """
-        plate_info = self.exp_name().split('-')[-1]
+        plate_info = self.exp_file_name().split('-')[-1]
         plate_type = re.search(r'\D+', plate_info).group()
         assert plate_type.lower() in ['ph', 'cond', 'gen'],\
             'Incorrect plate type. Plate type should be one of: pH, cond, gen'
@@ -156,7 +168,7 @@ class HDF5:
         str
             Generation of plate layout used in experiment
         """
-        plate_info = self.exp_name().split('-')[-1]
+        plate_info = self.exp_file_name().split('-')[-1]
         plate_gen = re.search(r'\d+', plate_info).group()
         assert plate_gen.isnumeric(),\
             'Incorrect experiment generation format. Format should be: ###'
@@ -169,7 +181,7 @@ class HDF5:
         str
             Plate side used in experiment
         """
-        plate_info = self.exp_name().split('-')[-1]
+        plate_info = self.exp_file_name().split('-')[-1]
         plate_side = re.search(r'\D+$', plate_info).group()
         assert plate_side.lower() in ['l', 'r'],\
             'Incorrect plate side. Plate side should be one of: L, R'
@@ -281,7 +293,7 @@ class HDF5:
         with engine.connect() as con:
             exp_id = con.execute("SELECT id FROM uncle_experiments "
                                  "WHERE name = '{}';".
-                                 format(self.exp_name()))
+                                 format(self.exp_file_name()))
             exp_id = exp_id.mappings().all()
         if exp_id:
             return
@@ -300,7 +312,7 @@ class HDF5:
             self.write_product_info_sql(engine)
             prod_id = self.exp_product_exists(engine)
 
-        exp_info = {'name': [self.exp_name()[:-1]],  # Strip plate side (L, R)
+        exp_info = {'name': [self.exp_file_name()],
                     'date': [self.exp_date()],
                     'uncle_instrument_id': inst_id,
                     'product_id': prod_id,
