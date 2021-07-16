@@ -301,14 +301,14 @@ class HDF5:
         if self.exp_instrument_exists(engine):
             inst_id = self.exp_instrument_exists(engine)
         # Write instrument info if it does not exist
-        elif not self.exp_instrument_exists(engine):
+        else:
             self.write_instrument_info_sql(engine)
             inst_id = self.exp_instrument_exists(engine)
 
         if self.exp_product_exists(engine):
             prod_id = self.exp_product_exists(engine)
         # Write product info if it does not exist
-        elif not self.exp_product_exists(engine):
+        else:
             self.write_product_info_sql(engine)
             prod_id = self.exp_product_exists(engine)
 
@@ -437,7 +437,7 @@ class HDF5:
         if engine and self.exp_exists(engine):
             df['uncle_experiment_id'] = self.exp_exists(engine)
         # Write experimental info if it does not exist
-        elif engine and not self.exp_exists(engine):
+        elif engine:
             self.write_exp_info_sql(engine)
             df['uncle_experiment_id'] = self.exp_exists(engine)
 
