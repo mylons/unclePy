@@ -300,7 +300,7 @@ class HDF5:
             self.write_product_info_sql(engine)
             prod_id = self.exp_product_exists(engine)
 
-        exp_info = {'name': [self.exp_name()],
+        exp_info = {'name': [self.exp_name()[:-1]],  # Strip plate side (L, R)
                     'date': [self.exp_date()],
                     'uncle_instrument_id': inst_id,
                     'product_id': prod_id,
