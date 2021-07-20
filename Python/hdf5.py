@@ -445,6 +445,8 @@ class HDF5:
 
     def wells(self):
         """
+         {uni well name: actual well name}
+
         Returns
         -------
         np.array
@@ -454,9 +456,43 @@ class HDF5:
         --------
         np.array(['A1', 'B1', ...])
         """
+        mapping_L = {'A1': 'A1', 'B1': 'B1', 'C1': 'C1', 'D1': 'D1',
+                     'E1': 'E1', 'F1': 'F1', 'G1': 'G1', 'H1': 'H1',
+                     'I1': 'A2', 'J1': 'B2', 'K1': 'C2', 'L1': 'D2',
+                     'M1': 'E2', 'N1': 'F2', 'O1': 'G2', 'P1': 'H2',
+                     'A2': 'A3', 'B2': 'B3', 'C2': 'C3', 'D2': 'D3',
+                     'E2': 'E3', 'F2': 'F3', 'G2': 'G3', 'H2': 'H3',
+                     'I2': 'A4', 'J2': 'B4', 'K2': 'C4', 'L2': 'D4',
+                     'M2': 'E4', 'N2': 'F4', 'O2': 'G4', 'P2': 'H4',
+                     'A3': 'A5', 'B3': 'B5', 'C3': 'C5', 'D3': 'D5',
+                     'E3': 'E5', 'F3': 'F5', 'G3': 'G5', 'H3': 'H5',
+                     'I3': 'A6', 'J3': 'B6', 'K3': 'C6', 'L3': 'D6',
+                     'M3': 'E6', 'N3': 'F6', 'O3': 'G6', 'P3': 'H6'}
+        mapping_R = {'A1': 'A7', 'B1': 'B7', 'C1': 'C7', 'D1': 'D7',
+                     'E1': 'E7', 'F1': 'F7', 'G1': 'G7', 'H1': 'H7',
+                     'I1': 'A8', 'J1': 'B8', 'K1': 'C8', 'L1': 'D8',
+                     'M1': 'E8', 'N1': 'F8', 'O1': 'G8', 'P1': 'H8',
+                     'A2': 'A9', 'B2': 'B9', 'C2': 'C9', 'D2': 'D9',
+                     'E2': 'E9', 'F2': 'F9', 'G2': 'G9', 'H2': 'H9',
+                     'I2': 'A10', 'J2': 'B10', 'K2': 'C10', 'L2': 'D10',
+                     'M2': 'E10', 'N2': 'F10', 'O2': 'G10', 'P2': 'H10',
+                     'A3': 'A11', 'B3': 'B11', 'C3': 'C11', 'D3': 'D11',
+                     'E3': 'E11', 'F3': 'F11', 'G3': 'G11', 'H3': 'H11',
+                     'I3': 'A12', 'J3': 'B12', 'K3': 'C12', 'L3': 'D12',
+                     'M3': 'E12', 'N3': 'F12', 'O3': 'G12', 'P3': 'H12'}
+
+        if self.exp_plate_side() == 'L':
+            mapping = mapping_L
+        elif self.exp_plate_side() == 'R':
+            mapping = mapping_R
+        else:
+            raise AttributeError('Cannot determine plate side for well '
+                                 'mapping.')
+
         wells = []
         for i in self.file['Application1']['Run1']['SampleData']:
-            wells = np.append(wells, i[0].decode('utf-8'))
+            well = i[0].decode('utf-8')
+            wells = np.append(wells, mapping[well])
         return wells
 
     def well_name_to_num(self, well):
