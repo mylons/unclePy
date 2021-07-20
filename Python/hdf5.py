@@ -226,7 +226,8 @@ class HDF5:
                               "WHERE id = '{}';".
                               format(self.uncle_experiment_id))
             exp = exp.mappings().all()
-        return True if exp else False
+        assert exp, 'Could not find UNcle experiment. ' \
+                    'Confirm experiment has been created.'
 
     def exp_instrument_exists(self, engine):
         """
@@ -370,8 +371,6 @@ class HDF5:
 
         if inst_id:
             return
-
-        # TODO complete this with real info
 
         inst_info = {'id': [int(self.exp_inst_num())],
                      'name': ['Uncle_01'],

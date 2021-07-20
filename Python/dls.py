@@ -746,8 +746,7 @@ class DLS(HDF5):
         engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
             username, password, host, database))
 
-        assert self.exp_confirm_created(engine), 'Could not find UNcle ' \
-            'experiment. Confirm experiment has been created.'
+        self.exp_confirm_created(engine)
 
         wells = self.wells()
         for well in wells:
@@ -784,8 +783,7 @@ class DLS(HDF5):
         engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
             username, password, host, database))
 
-        assert self.exp_confirm_created(engine), 'Could not find UNcle ' \
-            'experiment. Confirm experiment has been created.'
+        self.exp_confirm_created(engine)
 
         df = self.dls_sum()
         df.name = 'sum'
