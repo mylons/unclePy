@@ -66,16 +66,9 @@ class SLS(HDF5):
     write_sls_sum_excel(save_path)
         Saves summary file to .xlsx
 
-    write_sls_sum_csv(save_path)
-        Saves summary file to .csv
-
     write_sls_export_excel(save_path)
         Saves BCM/nm, SLS 266 nm/Count, SLS 473 nm/Count (at temperature) file
         to .xlsx
-
-    write_sls_bundle_csv(save_path)
-        Saves BCM/nm, SLS 266 nm/Count, SLS 473 nm/Count (at temperature) file
-        to .csv
 
     write_sls_sum_sql(username, password, host, database)
         Saves summary data to PostgreSQL database
@@ -448,92 +441,6 @@ class SLS(HDF5):
         """
         df = self.sls_export(well)
         return df
-
-    # ----------------------------------------------------------------------- #
-    # WRITE DATA TO EXCEL, CSV, SQL                                           #
-    # ----------------------------------------------------------------------- #
-    def write_sls_spec_excel(self, save_path):
-        """
-        Parameters
-        ----------
-        save_path : str
-            Directory to save Excel file to
-
-        Returns
-        -------
-        None
-        """
-        wells = self.wells()
-        with pd.ExcelWriter(save_path) as writer:
-            for well in wells:
-                df = self.sls_spec_well(well)
-                df.to_excel(writer, sheet_name = well)
-
-    def write_sls_sum_excel(self, save_path):
-        """
-        Parameters
-        ----------
-        save_path : str
-            Directory to save Excel file to
-
-        Returns
-        -------
-        None
-        """
-        df = self.sls_sum()
-        df.to_excel(save_path, index = False)
-
-    def write_sls_sum_csv(self, save_path):
-        """
-        Parameters
-        ----------
-        save_path : str
-            Directory to save CSVs to
-
-        Returns
-        -------
-        None
-        """
-        df = self.sls_sum()
-        run_name = self.exp_file_name()
-        df.to_csv('{}/{}-SLS Sum.csv'.format(save_path, run_name),
-                  index = False)
-
-    def write_sls_export_excel(self, save_path):
-        """
-        Parameters
-        ----------
-        save_path : str
-            Directory to save Excel file to
-
-        Returns
-        -------
-        None
-        """
-        wells = self.wells()
-        with pd.ExcelWriter(save_path) as writer:
-            for well in wells:
-                df = self.sls_export(well)
-                df.to_excel(writer, sheet_name = well, index = False)
-
-    def write_sls_bundle_csv(self, save_path):
-        """
-        Parameters
-        ----------
-        save_path : str
-            Directory to save CSVs to
-
-        Returns
-        -------
-        None
-        """
-        wells = self.wells()
-        run_name = self.exp_file_name()
-        for well in wells:
-            df = self.sls_bundle(well)
-            df.to_csv('{}/{}-SLS Bundle-{}.csv'.format(save_path,
-                                                       run_name, well),
-                      index = False)
 
     # ----------------------------------------------------------------------- #
     # WRITE DATA TO POSTGRESQL                                                #

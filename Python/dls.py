@@ -97,9 +97,6 @@ class DLS(HDF5):
     dls_sum()
         Returns pd.DataFrame of summary for entire experiment
 
-    write_dls_bundle_csv(save_directory)
-        Writes 3 files (Intensity, Mass, Correlation) for each well
-
     write_dls_sum_sql(username, password, host, database)
         Saves summary data to PostgreSQL database
 
@@ -696,36 +693,35 @@ class DLS(HDF5):
         return df
 
     # ----------------------------------------------------------------------- #
-    # WRITE DATA TO CSV                                                       #
+    # WRITE DATA TO POSTGRESQL                                                #
     # ----------------------------------------------------------------------- #
-    def write_dls_bundle_csv(self, save_directory):
+    def write_dls_sum_sql(self, username, password, host, database):
         """
         Parameters
         ----------
-        save_directory : str
-            Directory to save CSVs to
-            Each well has 3 files: Intensity, Mass, Correlation
+        username : str
+            Username for database access (e.g. "postgres")
+        password : str
+            Password for database access (likely none, i.e. empty string: "")
+        host : str
+            Host address for database access (e.g. "ebase-db-c")
+        database : str
+            Database name (e.g. "ebase_dev")
 
         Returns
         -------
         None
         """
-        wells = self.wells()
-        for well in wells:
-            inten_df = self.dls_bundle_intensity(well)
-            mass_df = self.dls_bundle_mass(well)
-            corr_df = self.dls_bundle_correlation(well)
+        engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
+            username, password, host, database))
 
-            inten_df.to_csv(save_directory + '/Intensity-{}-15.csv'.
-                            format(well), index = False)
-            mass_df.to_csv(save_directory + '/Mass-{}-15.csv'.
-                           format(well), index = False)
-            corr_df.to_csv(save_directory + '/Correlation-{}-15.csv'.
-                           format(well), index = False)
+        self.exp_confirm_created(engine)
 
-    # ----------------------------------------------------------------------- #
-    # WRITE DATA TO POSTGRESQL                                                #
-    # ----------------------------------------------------------------------- #
+        df = self.dls_sum()
+        df.name = 'sum'
+        df = self.df_to_sql(df, engine = engine)
+        df.to_sql('uncle_dls', engine, if_exists = 'append', index = False)
+
     def write_dls_bundle_sql(self, username, password, host, database):
         """
         Parameters
@@ -762,33 +758,6 @@ class DLS(HDF5):
                 df = self.df_to_sql(df, well = well, engine = engine)
                 df.to_sql('uncle_dls', engine, if_exists = 'append',
                           index = False)
-
-    def write_dls_sum_sql(self, username, password, host, database):
-        """
-        Parameters
-        ----------
-        username : str
-            Username for database access (e.g. "postgres")
-        password : str
-            Password for database access (likely none, i.e. empty string: "")
-        host : str
-            Host address for database access (e.g. "ebase-db-c")
-        database : str
-            Database name (e.g. "ebase_dev")
-
-        Returns
-        -------
-        None
-        """
-        engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
-            username, password, host, database))
-
-        self.exp_confirm_created(engine)
-
-        df = self.dls_sum()
-        df.name = 'sum'
-        df = self.df_to_sql(df, engine = engine)
-        df.to_sql('uncle_dls', engine, if_exists = 'append', index = False)
 
 
 def func(x, a, b):
