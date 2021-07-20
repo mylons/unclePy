@@ -27,56 +27,56 @@ class DLS(HDF5):
     dls_mass(well)
         Returns mass hydrodynamic diameter and amplitude for single well
 
-    dls_sum_color()
+    dls_summary_color()
         *** Not currently implemented ***
 
-    dls_sum_temperatures()
+    dls_summary_temperatures()
         Returns temperatures used for all wells
 
-    dls_sum_z_avg_diam(raw, diam)
+    dls_summary_z_avg_diam(raw, diam)
         Returns Z-average diameters/radii for all wells
 
-    dls_sum_z_avg_diff_coeff()
+    dls_summary_z_avg_diff_coeff()
         Returns Z-average differential coefficients for all wells
 
-    dls_sum_stdev_diam(raw)
+    dls_summary_stdev_diam(raw)
         Returns standard deviation of diameter for all wells
 
-    dls_sum_pdi()
+    dls_summary_pdi()
         Returns polydispersity index for all wells
 
-    dls_sum_correlation_values(for_plotting)
+    dls_summary_correlation_values(for_plotting)
         Returns experimental and expected values from correlation data/fit
         for all wells. Optionally returns time points used for plotting.
 
-    dls_sum_residuals()
+    dls_summary_residuals()
         Returns residuals of correlation plot fit for all wells.
 
-    dls_sum_rmse(mse)
+    dls_summary_rmse(mse)
         Returns (root) mean squared error
 
-    dls_sum_intensity()
+    dls_summary_intensity()
         Returns intensities for all wells
 
-    dls_sum_pk_mode_diam(raw, diam)
+    dls_summary_pk_mode_diam(raw, diam)
         Returns modal diameters/radii for all peaks for all wells
 
-    dls_sum_pk_est_mw(raw)
+    dls_summary_pk_est_mw(raw)
         Returns estimated molecular weights for all peaks for all wells
 
-    dls_sum_pk_poly()
+    dls_summary_pk_poly()
         Returns polydispersity percentage for all peaks for all wells
 
-    dls_sum_pk_mass()
+    dls_summary_pk_mass()
         Returns mass percentage for all peaks for all wells
 
-    dls_sum_data_filter()
+    dls_summary_data_filter()
         Returns filter used for all wells
 
-    dls_sum_viscosity()
+    dls_summary_viscosity()
         Returns viscosity for all wells
 
-    dls_sum_ri()
+    dls_summary_ri()
         Returns refractive index for all wells
 
     dls_atten_perc()
@@ -85,19 +85,19 @@ class DLS(HDF5):
     dls_laser_perc()
         Returns laser percentage for all wells
 
-    dls_sum_der_intensity()
+    dls_summary_der_intensity()
         Returns derived intensiteis for all wells
 
-    dls_sum_min_pk_area()
+    dls_summary_min_pk_area()
         Returns minimum peak area for all wells
 
-    dls_sum_min_rh()
+    dls_summary_min_rh()
         Returns minimum relative humidity for all wells
 
-    dls_sum()
+    dls_summary()
         Returns pd.DataFrame of summary for entire experiment
 
-    write_dls_sum_sql(username, password, host, database)
+    write_dls_summary_sql(username, password, host, database)
         Saves summary data to PostgreSQL database
 
     write_dls_bundle_sql(username, password, host, database)
@@ -180,7 +180,7 @@ class DLS(HDF5):
     # DATA COLLECTION FOR DLS SUMMARY                                         #
     # ----------------------------------------------------------------------- #
     @staticmethod
-    def dls_sum_color():
+    def dls_summary_color():
         """
         NOTE: Datasets have not included this yet, therefore unable to locate
               where it is captured in .uni file.
@@ -191,7 +191,7 @@ class DLS(HDF5):
         """
         return np.nan
 
-    def dls_sum_temperatures(self):
+    def dls_summary_temperatures(self):
         """
         Returns
         -------
@@ -210,7 +210,7 @@ class DLS(HDF5):
                               attrs['Temperature'])
         return pd.Series(temps)
 
-    def dls_sum_z_avg_diam(self, raw = True, diam = True):
+    def dls_summary_z_avg_diam(self, raw = True, diam = True):
         """
         NOTE: Modified values have upper limit of 1000, therefore any value
             greater than 1000 will be returned as 1000 if raw = False
@@ -243,7 +243,7 @@ class DLS(HDF5):
             vals = np.append(vals, val)
         return pd.Series(vals)
 
-    def dls_sum_z_avg_diff_coeff(self):
+    def dls_summary_z_avg_diff_coeff(self):
         """
         Uses Stokes-Einstein equation:
 
@@ -259,14 +259,15 @@ class DLS(HDF5):
         pd.Series
             Z-average differential coefficient for all wells
         """
-        abs_temp = convert_temperature(self.dls_sum_temperatures(),
+        abs_temp = convert_temperature(self.dls_summary_temperatures(),
                                        'Celsius', 'Kelvin')  # C to K
-        rad_m = self.dls_sum_z_avg_diam(diam = False) / 1000000000  # nm to m
-        visco = self.dls_sum_viscosity() / 1000  # cP to kg/m-s
+        rad_m = self.dls_summary_z_avg_diam(diam = False) / 1000000000
+        # nm to m
+        visco = self.dls_summary_viscosity() / 1000  # cP to kg/m-s
         coef = (Boltzmann * abs_temp) / (6 * np.pi * visco * rad_m)
         return coef
 
-    def dls_sum_stdev_diam(self, raw = True):
+    def dls_summary_stdev_diam(self, raw = True):
         """
         NOTE: Modified values have upper limit of 1000, therefore any value
             greater than 1000 will be returned as 1000 if raw = False
@@ -296,7 +297,7 @@ class DLS(HDF5):
             diams = np.append(diams, diam)
         return pd.Series(diams)
 
-    def dls_sum_pdi(self):
+    def dls_summary_pdi(self):
         """
         PDI = (σ/d)^2
         σ = standard deviation
@@ -307,14 +308,14 @@ class DLS(HDF5):
         pd.Series
             PDI (polydispersity index) values for all wells
         """
-        z_avg_diams = self.dls_sum_z_avg_diam(raw = True, diam = True)
-        stdev_diams = self.dls_sum_stdev_diam(raw = True)
+        z_avg_diams = self.dls_summary_z_avg_diam(raw = True, diam = True)
+        stdev_diams = self.dls_summary_stdev_diam(raw = True)
         pdis = []
         for s, z in zip(stdev_diams, z_avg_diams):
             pdis = np.append(pdis, ((s / z) ** 2))
         return pd.Series(pdis)
 
-    def dls_sum_correlation_values(self, for_plotting = False):
+    def dls_summary_correlation_values(self, for_plotting = False):
         """
         Returns
         -------
@@ -345,21 +346,21 @@ class DLS(HDF5):
                 values.append([true_values, predicated_values])
         return np.array(values, dtype = object)
 
-    def dls_sum_residuals(self):
+    def dls_summary_residuals(self):
         """
         Returns
         -------
         np.array
             Residuals for correlation fit for all wells
         """
-        true_predicted_values = self.dls_sum_correlation_values()
+        true_predicted_values = self.dls_summary_correlation_values()
         resid = []
         for i in true_predicted_values:
             diff = i[1] - i[0]
             resid.append(diff.tolist())
         return resid
 
-    def dls_sum_rmse(self, mse = False):
+    def dls_summary_rmse(self, mse = False):
         """
         NOTE: Exported files use a value called "Fit Var". It was instead
               decided to use RMSE as the measure of fit.
@@ -377,7 +378,7 @@ class DLS(HDF5):
         np.array
             Root mean squared errors for correlation fit for all wells
         """
-        true_predicted_values = self.dls_sum_correlation_values()
+        true_predicted_values = self.dls_summary_correlation_values()
         # true_values, predicted_values
         rmse = []
         for i in true_predicted_values:
@@ -385,7 +386,7 @@ class DLS(HDF5):
                              mean_squared_error(i[0], i[1], squared = mse))
         return rmse
 
-    def dls_sum_intensity(self):
+    def dls_summary_intensity(self):
         """
         Returns
         -------
@@ -403,7 +404,7 @@ class DLS(HDF5):
                               attrs['AverageIntensity'])
         return pd.Series(inten)
 
-    def dls_sum_pk_mode_diam(self, raw = True, diam = True):
+    def dls_summary_pk_mode_diam(self, raw = True, diam = True):
         """
         NOTE: Modified values have upper limit of 1000, therefore any value
             greater than 1000 will be returned as 1000 if raw = False
@@ -444,7 +445,7 @@ class DLS(HDF5):
             df[df > 1000] = 1000
         return df
 
-    def dls_sum_pk_est_mw(self, raw = True):
+    def dls_summary_pk_est_mw(self, raw = True):
         """
         NOTE: What is the highest value before "Out of Range"?
               So far, the highest value seen that still displays: 23,983.70
@@ -463,7 +464,7 @@ class DLS(HDF5):
         pd.DataFrame
             Estimated molecular weights for all peaks for all wells
         """
-        rad_df = self.dls_sum_pk_mode_diam(raw = True, diam = False)
+        rad_df = self.dls_summary_pk_mode_diam(raw = True, diam = False)
         cols = {i: i.replace('mode_diameter', 'est_mw') if 'mode_diameter' in i
                 else i for i in rad_df.columns}
         rad_df = rad_df.rename(columns = cols)
@@ -472,7 +473,7 @@ class DLS(HDF5):
             mw_df[mw_df > 25000] = -1  # Adjust accordingly to note above
         return mw_df
 
-    def dls_sum_pk_poly(self):
+    def dls_summary_pk_poly(self):
         """
         peak polydispersity (%) = (peak std / peak mean) * 100
 
@@ -498,7 +499,7 @@ class DLS(HDF5):
                                   for i in df.columns})
         return df
 
-    def dls_sum_pk_mass(self):
+    def dls_summary_pk_mass(self):
         """
         Returns
         -------
@@ -506,7 +507,7 @@ class DLS(HDF5):
         """
         return pd.Series(np.nan)
 
-    def dls_sum_data_filter(self):
+    def dls_summary_data_filter(self):
         """
         Returns
         -------
@@ -523,7 +524,7 @@ class DLS(HDF5):
                               decode('utf-8'))
         return pd.Series(dataf)
 
-    def dls_sum_viscosity(self):
+    def dls_summary_viscosity(self):
         """
         Returns
         -------
@@ -540,7 +541,7 @@ class DLS(HDF5):
                               ['DLS_Data']['DLS0001'].attrs['Viscosity'])
         return pd.Series(visco)
 
-    def dls_sum_ri(self):
+    def dls_summary_ri(self):
         """
         Returns
         -------
@@ -595,7 +596,7 @@ class DLS(HDF5):
                               attrs['Laser %'])
         return pd.Series(laser)
 
-    def dls_sum_der_intensity(self):
+    def dls_summary_der_intensity(self):
         """
         Derived intensity = intensity / attenuation % / laser %
 
@@ -605,7 +606,7 @@ class DLS(HDF5):
             unit: counts per second (cps)
             Derived intensities for all wells
         """
-        inten = self.dls_sum_intensity()
+        inten = self.dls_summary_intensity()
         atten = self.dls_atten_perc() / 100
         laser = self.dls_laser_perc() / 100
         dis = []
@@ -613,7 +614,7 @@ class DLS(HDF5):
             dis = np.append(dis, (i / a / l))
         return pd.Series(dis)
 
-    def dls_sum_min_pk_area(self):
+    def dls_summary_min_pk_area(self):
         """
         Returns
         -------
@@ -630,7 +631,7 @@ class DLS(HDF5):
                               ['DLS_Data'].attrs['Minimum Area'])
         return pd.Series(minpa)
 
-    def dls_sum_min_rh(self):
+    def dls_summary_min_rh(self):
         """
         Returns
         -------
@@ -649,39 +650,40 @@ class DLS(HDF5):
     # ----------------------------------------------------------------------- #
     # DATAFRAME ASSEMBLY                                                      #
     # ----------------------------------------------------------------------- #
-    def dls_sum(self):
+    def dls_summary(self):
         """
         Returns
         -------
-
+        pd.DataFrame
+            Full dataframe of DLS summary data for all wells
         """
         data = {
             'well'              : self.wells(),
             'sample'            : self.samples(),
-            'temperature'       : self.dls_sum_temperatures(),
-            'z_avg_diameter'    : self.dls_sum_z_avg_diam(raw = False,
-                                                          diam = True),
-            'z_avg_diff_coeff'  : self.dls_sum_z_avg_diff_coeff(),
-            'stdev_diameter'    : self.dls_sum_stdev_diam(raw = False),
-            'pdi'               : self.dls_sum_pdi(),
-            'intensity'         : self.dls_sum_intensity(),
-            'data_filter'       : self.dls_sum_data_filter(),
-            'viscosity'         : self.dls_sum_viscosity(),
-            'refractive_index'  : self.dls_sum_ri(),
-            'derived_intensity' : self.dls_sum_der_intensity(),
-            'min_pk_area'       : self.dls_sum_min_pk_area(),
-            'min_rel_humid'     : self.dls_sum_min_rh(),
-            'color'             : self.dls_sum_color(),
-            'residuals'         : self.dls_sum_residuals(),
-            'rmse'              : self.dls_sum_rmse(),
+            'temperature'       : self.dls_summary_temperatures(),
+            'z_avg_diameter'    : self.dls_summary_z_avg_diam(raw = False,
+                                                              diam = True),
+            'z_avg_diff_coeff'  : self.dls_summary_z_avg_diff_coeff(),
+            'stdev_diameter'    : self.dls_summary_stdev_diam(raw = False),
+            'pdi'               : self.dls_summary_pdi(),
+            'intensity'         : self.dls_summary_intensity(),
+            'data_filter'       : self.dls_summary_data_filter(),
+            'viscosity'         : self.dls_summary_viscosity(),
+            'refractive_index'  : self.dls_summary_ri(),
+            'derived_intensity' : self.dls_summary_der_intensity(),
+            'min_pk_area'       : self.dls_summary_min_pk_area(),
+            'min_rel_humid'     : self.dls_summary_min_rh(),
+            'color'             : self.dls_summary_color(),
+            'residuals'         : self.dls_summary_residuals(),
+            'rmse'              : self.dls_summary_rmse(),
         }
 
         # Multiple peaks, therefore below are returned as dataframes
-        pk_mode_diam      = self.dls_sum_pk_mode_diam(raw = False,
-                                                      diam = True)
-        pk_est_mw         = self.dls_sum_pk_est_mw(raw = False)
-        pk_polydispersity = self.dls_sum_pk_poly()
-        pk_mass           = self.dls_sum_pk_mass()
+        pk_mode_diam      = self.dls_summary_pk_mode_diam(raw = False,
+                                                          diam = True)
+        pk_est_mw         = self.dls_summary_pk_est_mw(raw = False)
+        pk_polydispersity = self.dls_summary_pk_poly()
+        pk_mass           = self.dls_summary_pk_mass()
 
         df = pd.DataFrame(data)
         df = df.merge(pk_mode_diam, right_index = True, left_on = 'well').\
@@ -695,7 +697,7 @@ class DLS(HDF5):
     # ----------------------------------------------------------------------- #
     # WRITE DATA TO POSTGRESQL                                                #
     # ----------------------------------------------------------------------- #
-    def write_dls_sum_sql(self, username, password, host, database):
+    def write_dls_summary_sql(self, username, password, host, database):
         """
         Parameters
         ----------
@@ -717,7 +719,7 @@ class DLS(HDF5):
 
         self.exp_confirm_created(engine)
 
-        df = self.dls_sum()
+        df = self.dls_summary()
         df.name = 'sum'
         df = self.df_to_sql(df, engine = engine)
         df.to_sql('uncle_dls', engine, if_exists = 'append', index = False)

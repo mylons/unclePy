@@ -26,19 +26,19 @@ class SLS(HDF5):
     sls_spec_intensity(well, temp)
         Returns intensities found at a single temperature for single well
 
-    sls_sum_color()
+    sls_summary_color()
         *** Not currently implemented ***
 
-    sls_sum_tms(well)
+    sls_summary_tms(well)
         Returns all TM values for single well
 
-    sls_sum_tonset(well)
+    sls_summary_tonset(well)
         Returns T_onset value for single well
 
-    sls_sum_tagg266(well)
+    sls_summary_tagg266(well)
         Returns T_agg 266 for single well
 
-    sls_sum_tagg473(well)
+    sls_summary_tagg473(well)
         Returns T_agg 473 for single well
 
     sls_bundle_bcm(well)
@@ -53,7 +53,7 @@ class SLS(HDF5):
     sls_spec_well(well)
         Returns pd.DataFrame of intensities for single well
 
-    sls_sum()
+    sls_summary()
         Returns pd.DataFrame of summary for entire experiment
 
     sls_export(well)
@@ -63,14 +63,14 @@ class SLS(HDF5):
     write_sls_spec_excel(save_path)
         Saves spectra file (intensity per wavelength at a temperature) to .xlsx
 
-    write_sls_sum_excel(save_path)
+    write_sls_summary_excel(save_path)
         Saves summary file to .xlsx
 
     write_sls_export_excel(save_path)
         Saves BCM/nm, SLS 266 nm/Count, SLS 473 nm/Count (at temperature) file
         to .xlsx
 
-    write_sls_sum_sql(username, password, host, database)
+    write_sls_summary_sql(username, password, host, database)
         Saves summary data to PostgreSQL database
 
     write_sls_bundle_sql(username, password, host, database)
@@ -182,7 +182,7 @@ class SLS(HDF5):
     # DATA COLLECTION FOR SLS SUMMARY                                         #
     # ----------------------------------------------------------------------- #
     @staticmethod
-    def sls_sum_color():
+    def sls_summary_color():
         """
         NOTE: Datasets have not included this yet, therefore unable to locate
               where it is captured in .uni file.
@@ -193,7 +193,7 @@ class SLS(HDF5):
         """
         return np.nan
 
-    def sls_sum_tms(self, well):
+    def sls_summary_tms(self, well):
         """
         Parameters
         ----------
@@ -214,7 +214,7 @@ class SLS(HDF5):
             ['Fluor_SLS_Data']['Analysis']['Tms'][0]
         return tms
 
-    def sls_sum_tonset(self, well):
+    def sls_summary_tonset(self, well):
         """
         Parameters
         ----------
@@ -232,7 +232,7 @@ class SLS(HDF5):
         tonset = verify(tonset)
         return tonset
 
-    def sls_sum_tagg266(self, well):
+    def sls_summary_tagg266(self, well):
         """
         Parameters
         ----------
@@ -250,7 +250,7 @@ class SLS(HDF5):
         tagg266 = verify(tagg266)
         return tagg266
 
-    def sls_sum_tagg473(self, well):
+    def sls_summary_tagg473(self, well):
         """
         Parameters
         ----------
@@ -356,7 +356,7 @@ class SLS(HDF5):
 
         return df
 
-    def sls_sum(self):
+    def sls_summary(self):
         """
         Returns
         -------
@@ -370,29 +370,30 @@ class SLS(HDF5):
         # Determine how many Tm columns
         tm_cols = []
         for i in self.wells():
-            tm_cols = np.append(tm_cols, np.flatnonzero(self.sls_sum_tms(i)))
+            tm_cols = np.append(tm_cols,
+                                np.flatnonzero(self.sls_summary_tms(i)))
         max_tm = int(np.max(tm_cols) + 1)
         cols.extend(['t_m_{}'.format(i + 1) for i in range(max_tm)])
 
         df = pd.DataFrame(columns = cols)
 
         for i in wells:
-            well_sum = {'color': self.sls_sum_color(),
-                        'well': i,
-                        't_onset': self.sls_sum_tonset(i),
-                        't_agg_266': self.sls_sum_tagg266(i),
-                        't_agg_473': self.sls_sum_tagg473(i)}
+            well_summary = {'color': self.sls_summary_color(),
+                            'well': i,
+                            't_onset': self.sls_summary_tonset(i),
+                            't_agg_266': self.sls_summary_tagg266(i),
+                            't_agg_473': self.sls_summary_tagg473(i)}
 
             sample_index = np.flatnonzero(
                 np.char.find(self.samples(), i) != -1)
-            well_sum['sample'] = samples[sample_index][0]
+            well_summary['sample'] = samples[sample_index][0]
 
-            tms = self.sls_sum_tms(i)
+            tms = self.sls_summary_tms(i)
             for j in range(max_tm):
-                well_sum['t_m_{}'.format(j + 1)] = \
+                well_summary['t_m_{}'.format(j + 1)] = \
                     tms[j] if tms[j] != 0 else np.nan
 
-            df = df.append(well_sum, ignore_index = True)
+            df = df.append(well_summary, ignore_index = True)
 
         return df
 
@@ -445,7 +446,7 @@ class SLS(HDF5):
     # ----------------------------------------------------------------------- #
     # WRITE DATA TO POSTGRESQL                                                #
     # ----------------------------------------------------------------------- #
-    def write_sls_sum_sql(self, username, password, host, database):
+    def write_sls_summary_sql(self, username, password, host, database):
         """
         Parameters
         ----------
@@ -467,7 +468,7 @@ class SLS(HDF5):
 
         self.exp_confirm_created(engine)
 
-        df = self.sls_sum()
+        df = self.sls_summary()
         df.name = 'sum'
         df = self.df_to_sql(df, engine = engine)
         df.to_sql('uncle_sls', engine, if_exists = 'append', index = False)
