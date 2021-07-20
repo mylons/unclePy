@@ -278,6 +278,7 @@ class HDF5:
             return False
 
     def write_exp_info_sql(self, engine, datetime_needed = True):
+        # TODO need to update this with well set
         """
         Parameters
         ----------

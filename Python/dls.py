@@ -18,14 +18,14 @@ class DLS(HDF5):
 
     Methods
     -------
+    dls_correlation(well)
+        Returns correlation time and amplitude for single well
+
     dls_intensity(well)
         Returns hydrodynamic diameter and amplitude for single well
 
     dls_mass(well)
         Returns mass hydrodynamic diameter and amplitude for single well
-
-    dls_correlation(well)
-        Returns correlation time and amplitude for single well
 
     dls_sum_color()
         *** Not currently implemented ***
@@ -116,6 +116,27 @@ class DLS(HDF5):
     # ----------------------------------------------------------------------- #
     # DATA COLLECTION FOR DLS BUNDLE                                          #
     # ----------------------------------------------------------------------- #
+    def dls_bundle_correlation(self, well):
+        """
+        Parameters
+        ----------
+        well : str
+            Single well name, e.g. 'A1'
+
+        Returns
+        -------
+        pd.DataFrame
+            Correlation time(sec) and amplitude for a single well
+        """
+        well_num = self.well_name_to_num(well)
+        corr = self.file['Application1']['Run1'][well_num]['DLS_Data'] \
+            ['DLS0001']['ExperimentAveraged']['AverageCorrelation'] \
+            ['Correlations'][:]
+        # Swap columns to align with typical export
+        corr = corr[:, [1, 0]]
+        df = pd.DataFrame(corr, columns = ['time', 'amplitude'])
+        return df
+
     def dls_bundle_intensity(self, well):
         """
         Parameters
@@ -156,27 +177,6 @@ class DLS(HDF5):
         mass[:, 0] *= self.factor
         df = pd.DataFrame(mass, columns = ['hydrodynamic_diameter',
                                            'amplitude'])
-        return df
-
-    def dls_bundle_correlation(self, well):
-        """
-        Parameters
-        ----------
-        well : str
-            Single well name, e.g. 'A1'
-
-        Returns
-        -------
-        pd.DataFrame
-            Correlation time(sec) and amplitude for a single well
-        """
-        well_num = self.well_name_to_num(well)
-        corr = self.file['Application1']['Run1'][well_num]['DLS_Data'] \
-            ['DLS0001']['ExperimentAveraged']['AverageCorrelation'] \
-            ['Correlations'][:]
-        # Swap columns to align with typical export
-        corr = corr[:, [1, 0]]
-        df = pd.DataFrame(corr, columns = ['time', 'amplitude'])
         return df
 
     # ----------------------------------------------------------------------- #
@@ -661,15 +661,12 @@ class DLS(HDF5):
         data = {
             'well'              : self.wells(),
             'sample'            : self.samples(),
-            'color'             : self.dls_sum_color(),
             'temperature'       : self.dls_sum_temperatures(),
             'z_avg_diameter'    : self.dls_sum_z_avg_diam(raw = False,
                                                           diam = True),
             'z_avg_diff_coeff'  : self.dls_sum_z_avg_diff_coeff(),
             'stdev_diameter'    : self.dls_sum_stdev_diam(raw = False),
             'pdi'               : self.dls_sum_pdi(),
-            'residuals'         : self.dls_sum_residuals(),
-            'rmse'              : self.dls_sum_rmse(),
             'intensity'         : self.dls_sum_intensity(),
             'data_filter'       : self.dls_sum_data_filter(),
             'viscosity'         : self.dls_sum_viscosity(),
@@ -677,6 +674,9 @@ class DLS(HDF5):
             'derived_intensity' : self.dls_sum_der_intensity(),
             'min_pk_area'       : self.dls_sum_min_pk_area(),
             'min_rel_humid'     : self.dls_sum_min_rh(),
+            'color'             : self.dls_sum_color(),
+            'residuals'         : self.dls_sum_residuals(),
+            'rmse'              : self.dls_sum_rmse(),
         }
 
         # Multiple peaks, therefore below are returned as dataframes
