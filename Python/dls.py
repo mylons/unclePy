@@ -113,7 +113,7 @@ class DLS(HDF5):
     # ----------------------------------------------------------------------- #
     # DATA COLLECTION FOR DLS BUNDLE                                          #
     # ----------------------------------------------------------------------- #
-    def dls_bundle_correlation(self, well):
+    def dls_correlation(self, well):
         """
         Parameters
         ----------
@@ -134,7 +134,7 @@ class DLS(HDF5):
         df = pd.DataFrame(corr, columns = ['time', 'amplitude'])
         return df
 
-    def dls_bundle_intensity(self, well):
+    def dls_intensity(self, well):
         """
         Parameters
         ----------
@@ -155,7 +155,7 @@ class DLS(HDF5):
                                             'amplitude'])
         return df
 
-    def dls_bundle_mass(self, well):
+    def dls_mass(self, well):
         """
         Parameters
         ----------
@@ -722,9 +722,12 @@ class DLS(HDF5):
         df = self.dls_summary()
         df.name = 'sum'
         df = self.df_to_sql(df, engine = engine)
-        df.to_sql('uncle_dls', engine, if_exists = 'append', index = False)
+        df.to_sql('uncle_dls_summary',
+                  engine,
+                  if_exists = 'append',
+                  index = False)
 
-    def write_dls_bundle_sql(self, username, password, host, database):
+    def write_dls_correlation_sql(self, username, password, host, database):
         """
         Parameters
         ----------

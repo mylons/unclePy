@@ -52,7 +52,7 @@ class HDF5:
     exp_plate_side()
         Returns side of plate used in experiment (L/R)
 
-    exp_exists(engine)
+    exp_name_exists(engine)
         Returns experiment ID if it exists, otherwise returns False
 
     exp_instrument_exists(engine)
@@ -187,7 +187,9 @@ class HDF5:
             'Incorrect plate side. Plate side should be one of: L, R'
         return plate_side
 
-    def exp_exists(self, engine):
+    def exp_name_exists(self, engine):
+        # TODO may need to look at more than just name e.g. plate side
+
         """
         NOTE: This checks if the name of the experiment already exists
               It does not make any checks on the experiment ID
@@ -426,20 +428,16 @@ class HDF5:
         pd.DataFrame
             Modified to fit database structure
         """
-        df['export_type'] = df.name.split('_')[0]
         df = add_datetime(df)
         if well:
             df['well'] = well
 
-        if len(df.name.split('_')) == 2:
-            df['dls_data_type'] = df.name.split('_')[1]
-
-        if engine and self.exp_exists(engine):
-            df['uncle_experiment_id'] = self.exp_exists(engine)
+        if engine and self.exp_name_exists(engine):
+            df['uncle_experiment_id'] = self.exp_name_exists(engine)
         # Write experimental info if it does not exist
         elif engine:
             self.write_exp_info_sql(engine)
-            df['uncle_experiment_id'] = self.exp_exists(engine)
+            df['uncle_experiment_id'] = self.exp_name_exists(engine)
 
         return df
 
