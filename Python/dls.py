@@ -133,6 +133,7 @@ class DLS(HDF5):
         # Swap columns to align with typical export
         corr = corr[:, [1, 0]]
         df = pd.DataFrame(corr, columns = ['time', 'amplitude'])
+        df['uncle_dls_summary_id'] = self.well_id_to_summary(well)
         return df
 
     def dls_intensity(self, well):
@@ -427,6 +428,7 @@ class DLS(HDF5):
         diams = {}
         for well in wells:
             well_num = self.well_name_to_num(well)
+            well_id = self.well_name_to_id(well)
             peaks = [i for i in self.file['Application1']['Run1'][well_num]
                      ['DLS_Data']['DLS0001']['ExperimentAveraged']
                      ['AverageCorrelation']['Intensity'].keys()
@@ -436,7 +438,7 @@ class DLS(HDF5):
                     ['DLS_Data']['DLS0001']['ExperimentAveraged'] \
                     ['AverageCorrelation']['Intensity'][peak] \
                     .attrs['Max'].item()
-                diams.setdefault(well, []).append(val)
+                diams.setdefault(well_id, []).append(val)
         df = pd.DataFrame.from_dict(diams, orient = 'index')
         df = df.rename(columns = {i: 'pk_{}_mode_diameter'.format(i + 1)
                                   for i in df.columns})
@@ -487,6 +489,7 @@ class DLS(HDF5):
         pk_poly = {}
         for well in wells:
             well_num = self.well_name_to_num(well)
+            well_id = self.well_name_to_id(well)
             path = self.file['Application1']['Run1'][well_num] \
                 ['DLS_Data']['DLS0001']['ExperimentAveraged'] \
                 ['AverageCorrelation']['Intensity']
@@ -494,7 +497,7 @@ class DLS(HDF5):
             for peak in peaks:
                 std = path[peak].attrs['Std'].item()
                 mean = path[peak].attrs['Mean'].item()
-                pk_poly.setdefault(well, []).append(100 * std / mean)
+                pk_poly.setdefault(well_id, []).append(100 * std / mean)
         df = pd.DataFrame.from_dict(pk_poly, orient = 'index')
         df = df.rename(columns = {i: 'pk_{}_polydispersity'.format(i + 1)
                                   for i in df.columns})
@@ -658,8 +661,10 @@ class DLS(HDF5):
         pd.DataFrame
             Full dataframe of DLS summary data for all wells
         """
+        well_ids = [self.well_name_to_id(well) for well in self.wells()]
+
         data = {
-            'well'              : self.wells(),
+            'well_id'           : well_ids,
             'sample'            : self.samples(),
             'temperature'       : self.dls_summary_temperatures(),
             'z_avg_diameter'    : self.dls_summary_z_avg_diam(raw = False,
@@ -687,9 +692,9 @@ class DLS(HDF5):
         pk_mass           = self.dls_summary_pk_mass()
 
         df = pd.DataFrame(data)
-        df = df.merge(pk_mode_diam, right_index = True, left_on = 'well').\
-            merge(pk_est_mw, right_index = True, left_on = 'well').\
-            merge(pk_polydispersity, right_index = True, left_on = 'well')
+        df = df.merge(pk_mode_diam, right_index = True, left_on = 'well_id').\
+            merge(pk_est_mw, right_index = True, left_on = 'well_id').\
+            merge(pk_polydispersity, right_index = True, left_on = 'well_id')
 
         # TODO add mass
 

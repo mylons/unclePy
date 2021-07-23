@@ -502,6 +502,24 @@ class HDF5:
             well_id = well_id.mappings().all()
         return well_id[0]['well_id']
 
+    def well_id_to_summary(self, well):
+        """
+        Parameters
+        ----------
+        well
+
+        Returns
+        -------
+
+        """
+        if well[0].isalpha():
+            well = self.well_name_to_id(well)
+        with self.engine.connect() as con:
+            summary_id = con.execute("SELECT id FROM uncle_dls_summary "
+                                     "WHERE well_id = {};".format(well))
+            summary_id = summary_id.mappings().all()
+        return summary_id[0]['id']
+
     def samples(self):
         """
         Returns
