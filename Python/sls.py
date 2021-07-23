@@ -1,7 +1,6 @@
 from hdf5 import HDF5, verify
 import pandas as pd
 import numpy as np
-from sqlalchemy import create_engine
 
 
 class SLS(HDF5):
@@ -446,61 +445,41 @@ class SLS(HDF5):
     # ----------------------------------------------------------------------- #
     # WRITE DATA TO POSTGRESQL                                                #
     # ----------------------------------------------------------------------- #
-    def write_sls_summary_sql(self, username, password, host, database):
+    def write_sls_summary_sql(self):
         """
-        Parameters
-        ----------
-        username : str
-            Username for database access (e.g. "postgres")
-        password : str
-            Password for database access (likely none, i.e. empty string: "")
-        host : str
-            Host address for database access (e.g. "ebase-db-c")
-        database : str
-            Database name (e.g. "ebase_dev")
-
         Returns
         -------
         None
         """
-        engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
-            username, password, host, database))
-
-        self.exp_confirm_created(engine)
+        self.exp_confirm_created()
 
         df = self.sls_summary()
         df.name = 'sum'
-        df = self.df_to_sql(df, engine = engine)
-        df.to_sql('uncle_sls', engine, if_exists = 'append', index = False)
+        df = self.df_to_sql(df)
+        df.to_sql('uncle_sls',
+                  self.engine,
+                  if_exists = 'append',
+                  index = False)
 
-    def write_sls_bundle_sql(self, username, password, host, database):
+    def write_sls_bundle_sql(self):
         """
         Parameters
         ----------
-        username : str
-            Username for database access (e.g. "postgres")
-        password : str
-            Password for database access (likely none, i.e. empty string: "")
-        host : str
-            Host address for database access (e.g. "ebase-db-c")
-        database : str
-            Database name (e.g. "ebase_dev")
-
         Returns
         -------
         None
         """
-        engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
-            username, password, host, database))
-
-        self.exp_confirm_created(engine)
+        self.exp_confirm_created()
 
         wells = self.wells()
         for well in wells:
             df = self.sls_bundle(well)
             df.name = 'bundle'
-            df = self.df_to_sql(df, well = well, engine = engine)
-            df.to_sql('uncle_sls', engine, if_exists = 'append', index = False)
+            df = self.df_to_sql(df, well = well)
+            df.to_sql('uncle_sls',
+                      self.engine,
+                      if_exists = 'append',
+                      index = False)
 
 
 """

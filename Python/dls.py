@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy.constants import Boltzmann, convert_temperature
-from sqlalchemy import create_engine
 from sklearn.metrics import mean_squared_error
 
 
@@ -104,8 +103,10 @@ class DLS(HDF5):
         Saves intensity, mass, correlation data per well to PostgreSQL database
     """
 
-    def __init__(self, file_path, uncle_experiment_id):
-        super().__init__(file_path, uncle_experiment_id)
+    def __init__(self, file_path, uncle_experiment_id, well_set_id,
+                 username, password, host, database):
+        super().__init__(file_path, uncle_experiment_id, well_set_id,
+                         username, password, host, database)
         # Hydrodynamic diameter is consistently 2x values found in .uni file
         # Is this possibly because values are radii and export is diameter?
         self.factor = 2
@@ -697,57 +698,29 @@ class DLS(HDF5):
     # ----------------------------------------------------------------------- #
     # WRITE DATA TO POSTGRESQL                                                #
     # ----------------------------------------------------------------------- #
-    def write_dls_summary_sql(self, username, password, host, database):
+    def write_dls_summary_sql(self):
         """
-        Parameters
-        ----------
-        username : str
-            Username for database access (e.g. "postgres")
-        password : str
-            Password for database access (likely none, i.e. empty string: "")
-        host : str
-            Host address for database access (e.g. "ebase-db-c")
-        database : str
-            Database name (e.g. "ebase_dev")
-
         Returns
         -------
         None
         """
-        engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
-            username, password, host, database))
-
-        self.exp_confirm_created(engine)
+        self.exp_confirm_created()
 
         df = self.dls_summary()
-        df.name = 'sum'
-        df = self.df_to_sql(df, engine = engine)
+        df.name = 'summary'
+        df = self.df_to_sql(df)
         df.to_sql('uncle_dls_summary',
-                  engine,
+                  self.engine,
                   if_exists = 'append',
                   index = False)
 
-    def write_dls_correlation_sql(self, username, password, host, database):
+    def write_dls_correlation_sql(self):
         """
-        Parameters
-        ----------
-        username : str
-            Username for database access (e.g. "postgres")
-        password : str
-            Password for database access (likely none, i.e. empty string: "")
-        host : str
-            Host address for database access (e.g. "ebase-db-c")
-        database : str
-            Database name (e.g. "ebase_dev")
-
         Returns
         -------
         None
         """
-        engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
-            username, password, host, database))
-
-        self.exp_confirm_created(engine)
+        self.exp_confirm_created()
 
         wells = self.wells()
         for well in wells:
@@ -763,6 +736,11 @@ class DLS(HDF5):
                 df = self.df_to_sql(df, well = well, engine = engine)
                 df.to_sql('uncle_dls', engine, if_exists = 'append',
                           index = False)
+        df = self.df_to_sql(df)
+        df.to_sql('uncle_dls_correlation',
+                  self.engine,
+                  if_exists = 'append',
+                  index = False)
 
 
 def func(x, a, b):

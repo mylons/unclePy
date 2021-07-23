@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import re
 from datetime import datetime
-from sqlalchemy import create_engine, update
+from sqlalchemy import create_engine
 
 
 class HDF5:
@@ -52,25 +52,25 @@ class HDF5:
     exp_plate_side()
         Returns side of plate used in experiment (L/R)
 
-    exp_name_exists(engine)
+    exp_name_exists()
         Returns experiment ID if it exists, otherwise returns False
 
-    exp_instrument_exists(engine)
+    exp_instrument_exists()
         Returns instrument ID if it exists, otherwise returns False
 
-    exp_product_exists(engine)
+    exp_product_exists()
         Returns product ID if it exists, otherwise returns False
 
-    write_exp_info_sql(engine, datetime_needed)
+    write_exp_info_sql(datetime_needed)
         Saves experiment metadata to PostgreSQL database
 
-    write_instrument_info_sql(engine, datetime_needed)
+    write_instrument_info_sql(datetime_needed)
         Saves instrument metadata to PostgreSQL database
 
-    write_product_info_sql(engine)
+    write_product_info_sql()
         Saves product info metadata to PostgreSQL database
 
-    df_to_sql(df, well, engine)
+    df_to_sql(df, well)
         Returns input dataframe with additional columns added to match
         associated database tables
 
@@ -81,17 +81,20 @@ class HDF5:
         Returns well number converted from input well name
         Example: 'A1' -> 'Well_01'
 
-    well_name_to_id(well, engine)
+    well_name_to_id(well)
         Returns database well ID for input well name
 
     samples()
         Returns sample names/descriptions
 
     """
-    def __init__(self, file_path, uncle_experiment_id, well_set_id):
+    def __init__(self, file_path, uncle_experiment_id, well_set_id,
+                 username, password, host, database):
         self.file = h5py.File(file_path, 'r')
         self.uncle_experiment_id = uncle_experiment_id
         self.well_set_id = well_set_id
+        self.engine = create_engine('postgresql://{}:{}@{}:5432/{}'.
+                                    format(username, password, host, database))
 
     def exp_file_name(self):
         """
@@ -191,17 +194,12 @@ class HDF5:
             'Incorrect plate side. Plate side should be one of: L, R'
         return plate_side
 
-    def exp_name_exists(self, engine):
+    def exp_name_exists(self):
         # TODO may need to look at more than just name e.g. plate side
 
         """
         NOTE: This checks if the name of the experiment already exists
               It does not make any checks on the experiment ID
-
-        Parameters
-        ----------
-        engine : sqlalchemy Engine
-            Passed in from calling function. Engine to connect to database.
 
         Returns
         -------
@@ -209,7 +207,7 @@ class HDF5:
             int: experiment ID, if it exists
             False: if experiment does not exist
         """
-        with engine.connect() as con:
+        with self.engine.connect() as con:
             exp_id = con.execute("SELECT id FROM uncle_experiments "
                                  "WHERE name = '{}';".
                                  format(self.exp_name()))
@@ -220,14 +218,14 @@ class HDF5:
         else:
             return False
 
-    def exp_confirm_created(self, engine):
+    def exp_confirm_created(self):
         """
 
         Returns
         -------
 
         """
-        with engine.connect() as con:
+        with self.engine.connect() as con:
             exp = con.execute("SELECT id FROM uncle_experiments "
                               "WHERE id = '{}';".
                               format(self.uncle_experiment_id))
@@ -235,20 +233,15 @@ class HDF5:
         assert exp, 'Could not find UNcle experiment. ' \
                     'Confirm experiment has been created.'
 
-    def exp_instrument_exists(self, engine):
+    def exp_instrument_exists(self):
         """
-        Parameters
-        ----------
-        engine : sqlalchemy Engine
-            Passed in from calling function. Engine to connect to database.
-
         Returns
         -------
         int or False
             int: instrument ID, if it exists
             False: if experiment instrument does not exist
         """
-        with engine.connect() as con:
+        with self.engine.connect() as con:
             inst_id = con.execute("SELECT id FROM uncle_instruments "
                                   "WHERE id = '{}';".
                                   format(self.exp_inst_num()))
@@ -259,20 +252,15 @@ class HDF5:
         else:
             return False
 
-    def exp_product_exists(self, engine):
+    def exp_product_exists(self):
         """
-        Parameters
-        ----------
-        engine : sqlalchemy Engine
-            Passed in from calling function. Engine to connect to database.
-
         Returns
         -------
         int or False
             int: product ID, if it exists
             False: if product does not exist
         """
-        with engine.connect() as con:
+        with self.engine.connect() as con:
             prod_id = con.execute("SELECT id FROM products "
                                   "WHERE name = '{}';".
                                   format(self.exp_product()))
@@ -283,13 +271,11 @@ class HDF5:
         else:
             return False
 
-    def write_exp_info_sql(self, engine, datetime_needed = True):
+    def write_exp_info_sql(self, datetime_needed = True):
         # TODO need to update this with well set
         """
         Parameters
         ----------
-        engine : sqlalchemy Engine
-            Passed in from calling function. Engine to connect to database.
         datetime_needed : bool (default = True)
             Whether to insert "created_at", "updated_at" columns
             These are necessary for Rails tables
@@ -298,7 +284,7 @@ class HDF5:
         -------
         None
         """
-        with engine.connect() as con:
+        with self.engine.connect() as con:
             exp_id = con.execute("SELECT id FROM uncle_experiments "
                                  "WHERE name = '{}';".
                                  format(self.exp_name()))
@@ -306,19 +292,19 @@ class HDF5:
         if exp_id:
             return
 
-        if self.exp_instrument_exists(engine):
-            inst_id = self.exp_instrument_exists(engine)
+        if self.exp_instrument_exists():
+            inst_id = self.exp_instrument_exists()
         # Write instrument info if it does not exist
         else:
-            self.write_instrument_info_sql(engine)
-            inst_id = self.exp_instrument_exists(engine)
+            self.write_instrument_info_sql()
+            inst_id = self.exp_instrument_exists()
 
-        if self.exp_product_exists(engine):
-            prod_id = self.exp_product_exists(engine)
+        if self.exp_product_exists():
+            prod_id = self.exp_product_exists()
         # Write product info if it does not exist
         else:
-            self.write_product_info_sql(engine)
-            prod_id = self.exp_product_exists(engine)
+            self.write_product_info_sql()
+            prod_id = self.exp_product_exists()
 
         exp_info = {'name': [self.exp_name()],
                     'date': [self.exp_date()],
@@ -332,7 +318,7 @@ class HDF5:
             df = add_datetime(df)
         update_params = df.to_dict('records')[0]
 
-        with engine.connect() as con:
+        with self.engine.connect() as con:
             con.execute("UPDATE uncle_experiments SET "
                         "name = '{}',"
                         "date = '{}',"
@@ -356,12 +342,10 @@ class HDF5:
                             self.uncle_experiment_id
                         ))
 
-    def write_instrument_info_sql(self, engine, datetime_needed = True):
+    def write_instrument_info_sql(self, datetime_needed = True):
         """
         Parameters
         ----------
-        engine : sqlalchemy Engine
-            Passed in from calling function. Engine to connect to database.
         datetime_needed : bool (default = True)
             Whether to insert "created_at", "updated_at" columns
             These are necessary for Rails tables
@@ -370,7 +354,7 @@ class HDF5:
         -------
         None
         """
-        with engine.connect() as con:
+        with self.engine.connect() as con:
             inst_id = con.execute("SELECT id FROM uncle_instruments "
                                   "WHERE id = '{}';".
                                   format(self.exp_inst_num()))
@@ -386,37 +370,24 @@ class HDF5:
         df = pd.DataFrame(inst_info)
         if datetime_needed:
             df = add_datetime(df)
-        df.to_sql('uncle_instruments', engine, if_exists = 'append',
+        df.to_sql('uncle_instruments', self.engine, if_exists = 'append',
                   index = False)
 
-    def write_product_info_sql(self, engine):
+    def write_product_info_sql(self):
         """
-        Parameters
-        ----------
-        engine : sqlalchemy Engine
-            Passed in from calling function. Engine to connect to database.
-
         Returns
         -------
         None
         """
-        with engine.connect() as con:
-            prod_id = con.execute("SELECT id FROM products "
-                                  "WHERE name = '{}';".
-                                  format(self.exp_product()))
-            prod_id = prod_id.mappings().all()
-
-        if prod_id:
+        if self.exp_product_exists():
             return
-
-        # TODO will these have catalog numbers?
 
         prod_info = {'name': [self.exp_product()],
                      'active': 'true'}
         df = pd.DataFrame(prod_info)
-        df.to_sql('products', engine, if_exists = 'append', index = False)
+        df.to_sql('products', self.engine, if_exists = 'append', index = False)
 
-    def df_to_sql(self, df, well = None, engine = None):
+    def df_to_sql(self, df, well = None):
         """
         Parameters
         ----------
@@ -424,8 +395,6 @@ class HDF5:
             Dataframe to be modified for PostgreSQL data table
         well : str
             Single well name, e.g. 'A1'
-        engine : sqlalchemy Engine
-            Passed in from calling function. Engine to connect to database.
 
         Returns
         -------
@@ -436,12 +405,12 @@ class HDF5:
         if well:
             df['well'] = well
 
-        if engine and self.exp_name_exists(engine):
-            df['uncle_experiment_id'] = self.exp_name_exists(engine)
+        if self.exp_name_exists():
+            df['uncle_experiment_id'] = self.exp_name_exists()
         # Write experimental info if it does not exist
-        elif engine:
-            self.write_exp_info_sql(engine)
-            df['uncle_experiment_id'] = self.exp_name_exists(engine)
+        else:
+            self.write_exp_info_sql()
+            df['uncle_experiment_id'] = self.exp_name_exists()
 
         return df
 
@@ -513,21 +482,19 @@ class HDF5:
         well_num = f'Well_{well_num:02}'
         return well_num
 
-    def well_name_to_id(self, well, engine):
+    def well_name_to_id(self, well):
         """
         Parameters
         ----------
         well : str
             Single well name, e.g. 'A1'
-        engine : sqlalchemy Engine
-            Passed in from calling function. Engine to connect to database.
 
         Returns
         -------
         int
             Database well_id
         """
-        with engine.connect() as con:
+        with self.engine.connect() as con:
             well_id = con.execute("SELECT well_id FROM well_set_wells "
                                   "WHERE well_set_id = {} "
                                   "AND plate_address = '{}';".
