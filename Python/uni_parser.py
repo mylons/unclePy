@@ -10,6 +10,9 @@ parser.add_argument('uni_file',
 parser.add_argument('uncle_experiment_id',
                     help = 'Database ID for UNcle experiment',
                     type = int)
+parser.add_argument('well_set_id',
+                    help = 'Database ID for associated well set',
+                    type = int)
 
 args = parser.parse_args()
 

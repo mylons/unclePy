@@ -85,9 +85,10 @@ class HDF5:
         Returns sample names/descriptions
 
     """
-    def __init__(self, file_path, uncle_experiment_id):
+    def __init__(self, file_path, uncle_experiment_id, well_set_id):
         self.file = h5py.File(file_path, 'r')
         self.uncle_experiment_id = uncle_experiment_id
+        self.well_set_id = well_set_id
 
     def exp_file_name(self):
         """
