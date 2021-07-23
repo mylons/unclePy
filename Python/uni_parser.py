@@ -20,7 +20,4 @@ if __name__ == '__main__':
     sls = SLS(args.uni_file, args.uncle_experiment_id)
     dls = DLS(args.uni_file, args.uncle_experiment_id)
 
-    dls.write_dls_bundle_sql('postgres', '', 'localhost', 'ebase_dev')
-    dls.write_dls_sum_sql('postgres', '', 'localhost', 'ebase_dev')
-    sls.write_sls_bundle_sql('postgres', '', 'localhost', 'ebase_dev')
-    sls.write_sls_sum_sql('postgres', '', 'localhost', 'ebase_dev')
+    dls.write_dls_summary_sql('postgres, '', localhost', 'ebase_dev')
