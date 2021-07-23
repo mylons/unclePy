@@ -728,19 +728,13 @@ class DLS(HDF5):
         self.exp_confirm_created()
 
         wells = self.wells()
+        df = pd.DataFrame(columns =
+            ['uncle_dls_summary_id', 'time', 'amplitude'])
         for well in wells:
-            inten_df = self.dls_bundle_intensity(well)
-            mass_df = self.dls_bundle_mass(well)
-            corr_df = self.dls_bundle_correlation(well)
+            corr_df = self.dls_correlation(well)
+            df = df.append(corr_df).reset_index(drop = True)
 
-            inten_df.name = 'bundle_intensity'
-            mass_df.name = 'bundle_mass'
-            corr_df.name = 'bundle_correlation'
-
-            for df in [inten_df, mass_df, corr_df]:
-                df = self.df_to_sql(df, well = well, engine = engine)
-                df.to_sql('uncle_dls', engine, if_exists = 'append',
-                          index = False)
+        df.name = 'dls_correlation'
         df = self.df_to_sql(df)
         df.to_sql('uncle_dls_correlation',
                   self.engine,

@@ -405,12 +405,15 @@ class HDF5:
         if well:
             df['well'] = well
 
-        if self.exp_name_exists():
-            df['uncle_experiment_id'] = self.exp_name_exists()
-        # Write experimental info if it does not exist
-        else:
-            self.write_exp_info_sql()
-            df['uncle_experiment_id'] = self.exp_name_exists()
+        if df.name == 'summary':
+            if self.exp_name_exists():
+                df['uncle_experiment_id'] = self.exp_name_exists()
+            # Write experimental info if it does not exist
+            else:
+                self.write_exp_info_sql()
+                df['uncle_experiment_id'] = self.exp_name_exists()
+        elif df.name == 'dls_correlation':
+            df['uncle_dls_summary_id']
 
         return df
 
