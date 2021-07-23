@@ -81,6 +81,9 @@ class HDF5:
         Returns well number converted from input well name
         Example: 'A1' -> 'Well_01'
 
+    well_name_to_id(well, engine)
+        Returns database well ID for input well name
+
     samples()
         Returns sample names/descriptions
 
@@ -509,6 +512,28 @@ class HDF5:
         well_num = np.argwhere(self.wells() == well)[0][0] + 1
         well_num = f'Well_{well_num:02}'
         return well_num
+
+    def well_name_to_id(self, well, engine):
+        """
+        Parameters
+        ----------
+        well : str
+            Single well name, e.g. 'A1'
+        engine : sqlalchemy Engine
+            Passed in from calling function. Engine to connect to database.
+
+        Returns
+        -------
+        int
+            Database well_id
+        """
+        with engine.connect() as con:
+            well_id = con.execute("SELECT well_id FROM well_set_wells "
+                                  "WHERE well_set_id = {} "
+                                  "AND plate_address = '{}';".
+                                  format(self.well_set_id, well))
+            well_id = well_id.mappings().all()
+        return well_id[0]['well_id']
 
     def samples(self):
         """
