@@ -376,9 +376,9 @@ class HDF5:
             return
 
         inst_info = {'id': [int(self.exp_inst_num())],
-                     'name': ['Uncle_01'],
+                     'name': ['UNcle_01'],
                      'location': ['Shnider/Hough lab'],
-                     'model': ['Uncle']}
+                     'model': ['UNcle']}
         df = pd.DataFrame(inst_info)
         if datetime_needed:
             df = add_datetime(df)

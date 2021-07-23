@@ -8,7 +8,7 @@ parser.add_argument('uni_file',
                     help = 'Path to .uni file',
                     type = str)
 parser.add_argument('uncle_experiment_id',
-                    help = 'Database ID for Uncle experiment',
+                    help = 'Database ID for UNcle experiment',
                     type = int)
 
 args = parser.parse_args()
