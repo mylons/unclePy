@@ -55,8 +55,17 @@ class HDF5:
     exp_plate_side()
         Returns side of plate used in experiment (L/R)
 
+    wells()
+        Returns names of wells used in experiment
+
+    samples()
+        Returns sample names/descriptions
+
     exp_name_exists()
         Returns experiment ID if it exists, otherwise returns False
+
+    exp_confirm_created()
+        Checks experiment has been saved to database. Returns nothing.
 
     exp_instrument_exists()
         Returns instrument ID if it exists, otherwise returns False
@@ -77,8 +86,6 @@ class HDF5:
         Returns input dataframe with additional columns added to match
         associated database tables
 
-    wells()
-        Returns names of wells used in experiment
 
     well_name_to_num(well)
         Returns well number converted from input well name
@@ -87,8 +94,9 @@ class HDF5:
     well_name_to_id(well)
         Returns database well ID for input well name
 
-    samples()
-        Returns sample names/descriptions
+    well_id_to_summary(well)
+
+
 
     """
     def __init__(self, file_path, uncle_experiment_id, well_set_id):
@@ -125,6 +133,9 @@ class HDF5:
                           'I3': 'A12', 'J3': 'B12', 'K3': 'C12', 'L3': 'D12',
                           'M3': 'E12', 'N3': 'F12', 'O3': 'G12', 'P3': 'H12'}
 
+    # ----------------------------------------------------------------------- #
+    # EXPERIMENT METADATA                                                     #
+    # ----------------------------------------------------------------------- #
     def exp_file_name(self):
         """
         Returns
@@ -223,6 +234,67 @@ class HDF5:
             'Incorrect plate side. Plate side should be one of: L, R'
         return plate_side
 
+    # ----------------------------------------------------------------------- #
+    # EXPERIMENT INFORMATION                                                  #
+    # ----------------------------------------------------------------------- #
+    def wells(self):
+        """
+         {uni well name: actual well name}
+
+        Returns
+        -------
+        np.array
+            Well names
+
+        Examples
+        --------
+        np.array(['A1', 'B1', ...])
+        """
+        if self.exp_plate_side() == 'L':
+            mapping = self.mapping_L
+        elif self.exp_plate_side() == 'R':
+            mapping = self.mapping_R
+        else:
+            raise AttributeError('Cannot determine plate side for well '
+                                 'mapping.')
+
+        wells = []
+        for i in self.file['Application1']['Run1']['SampleData']:
+            well = i[0].decode('utf-8')
+            wells = np.append(wells, mapping[well])
+        return wells
+
+    def samples(self):
+        """
+        Returns
+        -------
+        np.array
+            Sample names
+
+        Examples
+        --------
+        np.array(['0.1 mg/ml Uni A1', '0.1 mg/ml Uni B1', ...])
+        """
+        if self.exp_plate_side() == 'L':
+            mapping = self.mapping_L
+        elif self.exp_plate_side() == 'R':
+            mapping = self.mapping_R
+        else:
+            raise AttributeError('Cannot determine plate side for well '
+                                 'mapping.')
+        samples = []
+
+        for i in self.file['Application1']['Run1']['SampleData']:
+            sample_name = i[1].decode('utf-8').split(' ')
+            sample = sample_name[-1]
+            corrected_sample_name = [mapping[sample] if i == sample
+                                     else i for i in sample_name]
+            samples = np.append(samples, ' '.join(corrected_sample_name))
+        return samples
+
+    # ----------------------------------------------------------------------- #
+    # EXPERIMENT CHECKS                                                       #
+    # ----------------------------------------------------------------------- #
     def exp_name_exists(self):
         # TODO may need to look at more than just name e.g. plate side
 
@@ -249,10 +321,9 @@ class HDF5:
 
     def exp_confirm_created(self):
         """
-
         Returns
         -------
-
+        None
         """
         with self.engine.connect() as con:
             exp = con.execute("SELECT id FROM uncle_experiments "
@@ -300,6 +371,9 @@ class HDF5:
         else:
             return False
 
+    # ----------------------------------------------------------------------- #
+    # WRITE DATA TO POSTGRESQL                                                #
+    # ----------------------------------------------------------------------- #
     def write_exp_info_sql(self, datetime_needed = True):
         # TODO need to update this with well set
         """
@@ -444,33 +518,9 @@ class HDF5:
 
         return df
 
-    def wells(self):
-        """
-         {uni well name: actual well name}
-
-        Returns
-        -------
-        np.array
-            Well names
-
-        Examples
-        --------
-        np.array(['A1', 'B1', ...])
-        """
-        if self.exp_plate_side() == 'L':
-            mapping = self.mapping_L
-        elif self.exp_plate_side() == 'R':
-            mapping = self.mapping_R
-        else:
-            raise AttributeError('Cannot determine plate side for well '
-                                 'mapping.')
-
-        wells = []
-        for i in self.file['Application1']['Run1']['SampleData']:
-            well = i[0].decode('utf-8')
-            wells = np.append(wells, mapping[well])
-        return wells
-
+    # ----------------------------------------------------------------------- #
+    # UTILITY FUNCTIONS                                                       #
+    # ----------------------------------------------------------------------- #
     def well_name_to_num(self, well):
         """
         Parameters
@@ -511,11 +561,13 @@ class HDF5:
         """
         Parameters
         ----------
-        well
+        well : str
+            Single well name, e.g. 'A1'
 
         Returns
         -------
-
+        int
+            Database summary_id
         """
         if well[0].isalpha():
             well = self.well_name_to_id(well)
@@ -524,34 +576,6 @@ class HDF5:
                                      "WHERE well_id = {};".format(well))
             summary_id = summary_id.mappings().all()
         return summary_id[0]['id']
-
-    def samples(self):
-        """
-        Returns
-        -------
-        np.array
-            Sample names
-
-        Examples
-        --------
-        np.array(['0.1 mg/ml Uni A1', '0.1 mg/ml Uni B1', ...])
-        """
-        if self.exp_plate_side() == 'L':
-            mapping = self.mapping_L
-        elif self.exp_plate_side() == 'R':
-            mapping = self.mapping_R
-        else:
-            raise AttributeError('Cannot determine plate side for well '
-                                 'mapping.')
-        samples = []
-
-        for i in self.file['Application1']['Run1']['SampleData']:
-            sample_name = i[1].decode('utf-8').split(' ')
-            sample = sample_name[-1]
-            corrected_sample_name = [mapping[sample] if i == sample
-                                     else i for i in sample_name]
-            samples = np.append(samples, ' '.join(corrected_sample_name))
-        return samples
 
 
 def add_datetime(df):
