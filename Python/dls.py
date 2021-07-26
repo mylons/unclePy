@@ -99,8 +99,14 @@ class DLS(HDF5):
     write_dls_summary_sql(username, password, host, database)
         Saves summary data to PostgreSQL database
 
-    write_dls_bundle_sql(username, password, host, database)
-        Saves intensity, mass, correlation data per well to PostgreSQL database
+    write_dls_correlation_sql()
+        Saves correlation data for all wells to PostgreSQL database
+
+    write_dls_intensity_sql()
+        Saves intensity data for all wells to PostgreSQL database
+
+    write_dls_mass_sql()
+        Saves maass data for all wells to PostgreSQL database
     """
 
     def __init__(self, file_path, uncle_experiment_id, well_set_id):
@@ -110,7 +116,7 @@ class DLS(HDF5):
         self.factor = 2
 
     # ----------------------------------------------------------------------- #
-    # DATA COLLECTION FOR DLS BUNDLE                                          #
+    # DATA COLLECTION FOR DLS CORRELATION, INTENSITY, MASS                    #
     # ----------------------------------------------------------------------- #
     def dls_correlation(self, well):
         """
