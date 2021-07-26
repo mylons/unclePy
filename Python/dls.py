@@ -153,6 +153,7 @@ class DLS(HDF5):
         inten[:, 0] *= self.factor
         df = pd.DataFrame(inten, columns = ['hydrodynamic_diameter',
                                             'amplitude'])
+        df['uncle_dls_summary_id'] = self.well_id_to_summary(well)
         return df
 
     def dls_mass(self, well):
@@ -734,6 +735,28 @@ class DLS(HDF5):
         df.name = 'dls_correlation'
         df = self.df_to_sql(df)
         df.to_sql('uncle_dls_correlation',
+                  self.engine,
+                  if_exists = 'append',
+                  index = False)
+
+    def write_dls_intensity_sql(self):
+        """
+        Returns
+        -------
+        None
+        """
+        self.exp_confirm_created()
+
+        wells = self.wells()
+        df = pd.DataFrame(columns =
+                          ['uncle_dls_summary_id', 'hydrodynamic_diameter',
+                           'amplitude'])
+        for well in wells:
+            inten_df = self.dls_intensity(well)
+            df = df.append(inten_df).reset_index(drop = True)
+        df.name = 'dls_intensity'
+        df = self.df_to_sql(df)
+        df.to_sql('uncle_dls_intensity',
                   self.engine,
                   if_exists = 'append',
                   index = False)
