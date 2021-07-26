@@ -29,8 +29,8 @@ class DLS(HDF5):
     dls_summary_color()
         *** Not currently implemented ***
 
-    dls_summary_temperatures()
-        Returns temperatures used for all wells
+    dls_summary_temperature()
+        Returns temperature used for all wells
 
     dls_summary_z_avg_diam(raw, diam)
         Returns Z-average diameters/radii for all wells
@@ -106,7 +106,7 @@ class DLS(HDF5):
         Saves intensity data for all wells to PostgreSQL database
 
     write_dls_mass_sql()
-        Saves maass data for all wells to PostgreSQL database
+        Saves mass data for all wells to PostgreSQL database
     """
 
     def __init__(self, file_path, uncle_experiment_id, well_set_id):
@@ -198,7 +198,7 @@ class DLS(HDF5):
         """
         return np.nan
 
-    def dls_summary_temperatures(self):
+    def dls_summary_temperature(self):
         """
         Returns
         -------
@@ -266,7 +266,7 @@ class DLS(HDF5):
         pd.Series
             Z-average differential coefficient for all wells
         """
-        abs_temp = convert_temperature(self.dls_summary_temperatures(),
+        abs_temp = convert_temperature(self.dls_summary_temperature(),
                                        'Celsius', 'Kelvin')  # C to K
         rad_m = self.dls_summary_z_avg_diam(diam = False) / 1000000000
         # nm to m
@@ -671,7 +671,7 @@ class DLS(HDF5):
         data = {
             'well_id'           : well_ids,
             'sample'            : self.samples(),
-            'temperature'       : self.dls_summary_temperatures(),
+            'temperature'       : self.dls_summary_temperature(),
             'z_avg_diameter'    : self.dls_summary_z_avg_diam(raw = False,
                                                               diam = True),
             'z_avg_diff_coeff'  : self.dls_summary_z_avg_diff_coeff(),
@@ -736,8 +736,8 @@ class DLS(HDF5):
         df = pd.DataFrame(columns =
                           ['uncle_dls_summary_id', 'time', 'amplitude'])
         for well in wells:
-            corr_df = self.dls_correlation(well)
-            df = df.append(corr_df).reset_index(drop = True)
+            df_corr = self.dls_correlation(well)
+            df = df.append(df_corr).reset_index(drop = True)
         df.name = 'dls_correlation'
         df = self.df_to_sql(df)
         df.to_sql('uncle_dls_correlation',
@@ -755,11 +755,12 @@ class DLS(HDF5):
 
         wells = self.wells()
         df = pd.DataFrame(columns =
-                          ['uncle_dls_summary_id', 'hydrodynamic_diameter',
+                          ['uncle_dls_summary_id',
+                           'hydrodynamic_diameter',
                            'amplitude'])
         for well in wells:
-            inten_df = self.dls_intensity(well)
-            df = df.append(inten_df).reset_index(drop = True)
+            df_inten = self.dls_intensity(well)
+            df = df.append(df_inten).reset_index(drop = True)
         df.name = 'dls_intensity'
         df = self.df_to_sql(df)
         df.to_sql('uncle_dls_intensity',
@@ -780,8 +781,8 @@ class DLS(HDF5):
                           ['uncle_dls_summary_id', 'hydrodynamic_diameter',
                            'amplitude'])
         for well in wells:
-            mass_df = self.dls_mass(well)
-            df = df.append(mass_df).reset_index(drop = True)
+            df_mass = self.dls_mass(well)
+            df = df.append(df_mass).reset_index(drop = True)
         df.name = 'dls_mass'
         df = self.df_to_sql(df)
         df.to_sql('uncle_dls_mass',

@@ -13,8 +13,8 @@ class SLS(HDF5):
 
     Methods
     -------
-    sls_temperatures(well)
-        Returns temperatures used for single well
+    sls_temperature(well)
+        Returns temperature used for single well
 
     sls_spec_times(well)
         Returns times used for single well
@@ -40,6 +40,15 @@ class SLS(HDF5):
     sls_summary_tagg473(well)
         Returns T_agg 473 for single well
 
+    sls_bcm(well)
+        Returns BCM/nm for single well
+
+    sls_266(well)
+        Returns SLS 266 nm/Count for single well with temperature
+
+    sls_473(well)
+        Returns SLS 473 nm/Count for single well with temperature
+
     sls_spec_well(well)
         Returns pd.DataFrame of intensities for single well
 
@@ -50,27 +59,17 @@ class SLS(HDF5):
         Returns pd.DataFrame of BCM/nm, SLS 266 nm/Count, SLS 473 nm/Count
         for single well
 
-    write_sls_spec_excel(save_path)
-        Saves spectra file (intensity per wavelength at a temperature) to .xlsx
-
-    write_sls_summary_excel(save_path)
-        Saves summary file to .xlsx
-
-    write_sls_export_excel(save_path)
-        Saves BCM/nm, SLS 266 nm/Count, SLS 473 nm/Count (at temperature) file
-        to .xlsx
-
     write_sls_summary_sql(username, password, host, database)
         Saves summary data to PostgreSQL database
     """
 
-    def __init__(self, file_path, uncle_experiment_id):
-        super().__init__(file_path, uncle_experiment_id)
+    def __init__(self, file_path, uncle_experiment_id, well_set_id):
+        super().__init__(file_path, uncle_experiment_id, well_set_id)
 
     # ----------------------------------------------------------------------- #
     # GENERIC DATA COLLECTION                                                 #
     # ----------------------------------------------------------------------- #
-    def sls_temperatures(self, well):
+    def sls_temperature(self, well):
         """
         Parameters
         ----------
@@ -80,7 +79,7 @@ class SLS(HDF5):
         Returns
         -------
         np.array
-            Temperatures used in SLS analysis for single well
+            Temperature used in SLS analysis for single well
         """
         well_num = self.well_name_to_num(well)
         meas_dir = self.file['Application1']['Run1'][well_num] \
@@ -150,7 +149,7 @@ class SLS(HDF5):
             Intensities for a single temp of single well
         """
         well_num = self.well_name_to_num(well)
-        temps = self.sls_temperatures(well)
+        temps = self.sls_temperature(well)
         # Cannot index into HDF5 dataset, therefore need to call with dict key
         index = np.flatnonzero(temps == temp)[0]
         inten_cnt = f'{index + 1:04}'
@@ -255,9 +254,9 @@ class SLS(HDF5):
         return tagg473
 
     # ----------------------------------------------------------------------- #
-    # DATA COLLECTION FOR SLS EXPORT                                          #
+    # DATA COLLECTION FOR SLS BCM, 266, 473                                   #
     # ----------------------------------------------------------------------- #
-    def sls_export_bcm(self, well):
+    def sls_bcm(self, well):
         """
         Parameters
         ----------
@@ -283,15 +282,15 @@ class SLS(HDF5):
 
         Returns
         -------
-        np.array
-            SLS 266 nm/Count for single well
+        pd.DataFrame
+            SLS 266 nm/Count for single well with temperature
         """
         well_num = self.well_name_to_num(well)
         sls_266 = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['SLS266'][:]
         return sls_266
 
-    def sls_export_473(self, well):
+    def sls_473(self, well):
         """
         Parameters
         ----------
@@ -300,8 +299,8 @@ class SLS(HDF5):
 
         Returns
         -------
-        np.array
-            SLS 473 nm/Count for single well
+        pd.DataFrame
+            SLS 266 nm/Count for single well with temperature
         """
         well_num = self.well_name_to_num(well)
         sls_473 = self.file['Application1']['Run1'][well_num] \
@@ -324,7 +323,7 @@ class SLS(HDF5):
             Full dataframe of SLS intensities for single well
             This is comparable to an Excel tab for one well, e.g. 'A1'
         """
-        temps = self.sls_temperatures(well)
+        temps = self.sls_temperature(well)
         times = self.sls_times(well)
         waves = self.sls_spec_wavelengths(well)
         inten = [pd.Series(self.sls_spec_intensity(well, temp))
@@ -352,32 +351,33 @@ class SLS(HDF5):
         wells = self.wells()
         samples = self.samples()
 
-        cols = ['color', 'well', 'sample', 't_onset', 't_agg_266', 't_agg_473']
-        # Determine how many Tm columns
+        cols = ['color', 'well_id', 'sample', 't_onset', 't_agg_266',
+                't_agg_473']
+        # Determine number of Tm columns
         tm_cols = []
-        for i in self.wells():
+        for well in wells:
             tm_cols = np.append(tm_cols,
-                                np.flatnonzero(self.sls_summary_tms(i)))
+                                np.flatnonzero(self.sls_summary_tms(well)))
         max_tm = int(np.max(tm_cols) + 1)
         cols.extend(['t_m_{}'.format(i + 1) for i in range(max_tm)])
 
         df = pd.DataFrame(columns = cols)
 
-        for i in wells:
+        for well in wells:
             well_summary = {'color': self.sls_summary_color(),
-                            'well': i,
-                            't_onset': self.sls_summary_tonset(i),
-                            't_agg_266': self.sls_summary_tagg266(i),
-                            't_agg_473': self.sls_summary_tagg473(i)}
+                            'well_id': self.well_name_to_id(well),
+                            't_onset': self.sls_summary_tonset(well),
+                            't_agg_266': self.sls_summary_tagg266(well),
+                            't_agg_473': self.sls_summary_tagg473(well)}
 
             sample_index = np.flatnonzero(
-                np.char.find(self.samples(), i) != -1)
+                np.char.find(self.samples(), well) != -1)
             well_summary['sample'] = samples[sample_index][0]
 
-            tms = self.sls_summary_tms(i)
-            for j in range(max_tm):
-                well_summary['t_m_{}'.format(j + 1)] = \
-                    tms[j] if tms[j] != 0 else np.nan
+            tms = self.sls_summary_tms(well)
+            for i in range(max_tm):
+                well_summary['t_m_{}'.format(i + 1)] = \
+                    tms[i] if tms[i] != 0 else np.nan
 
             df = df.append(well_summary, ignore_index = True)
 
