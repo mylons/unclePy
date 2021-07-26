@@ -24,3 +24,7 @@ if __name__ == '__main__':
     dls.write_dls_correlation_sql()
     dls.write_dls_intensity_sql()
     dls.write_dls_mass_sql()
+    sls.write_sls_summary_sql()
+    sls.write_sls_266_sql()
+    sls.write_sls_473_sql()
+    sls.write_sls_bcm_sql()
