@@ -86,7 +86,6 @@ class HDF5:
         Returns input dataframe with additional columns added to match
         associated database tables
 
-
     well_name_to_num(well)
         Returns well number converted from input well name
         Example: 'A1' -> 'Well_01'
@@ -94,10 +93,8 @@ class HDF5:
     well_name_to_id(well)
         Returns database well ID for input well name
 
-    well_id_to_summary(well)
-
-
-
+    well_name_to_summary(well)
+        Returns database summary ID for input well name
     """
     def __init__(self, file_path, uncle_experiment_id, well_set_id):
         self.file = h5py.File(file_path, 'r')
@@ -557,7 +554,7 @@ class HDF5:
             well_id = well_id.mappings().all()
         return well_id[0]['well_id']
 
-    def well_id_to_summary(self, well):
+    def well_name_to_summary(self, well):
         """
         Parameters
         ----------

@@ -137,7 +137,7 @@ class DLS(HDF5):
         # Swap columns to align with typical export
         corr = corr[:, [1, 0]]
         df = pd.DataFrame(corr, columns = ['time', 'amplitude'])
-        df['uncle_dls_summary_id'] = self.well_id_to_summary(well)
+        df['uncle_dls_summary_id'] = self.well_name_to_summary(well)
         return df
 
     def dls_intensity(self, well):
@@ -159,7 +159,7 @@ class DLS(HDF5):
         inten[:, 0] *= self.factor
         df = pd.DataFrame(inten, columns = ['hydrodynamic_diameter',
                                             'amplitude'])
-        df['uncle_dls_summary_id'] = self.well_id_to_summary(well)
+        df['uncle_dls_summary_id'] = self.well_name_to_summary(well)
         return df
 
     def dls_mass(self, well):
