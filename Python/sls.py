@@ -319,9 +319,17 @@ class SLS(HDF5):
             SLS 266 nm/Count for single well with temperature
         """
         well_num = self.well_name_to_num(well)
+        temperature = self.sls_temperature(well)
         sls_473 = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['SLS473'][:]
-        return sls_473
+        sls_473_data = {'uncle_sls_summary_id': self.well_id_to_summary(well),
+                        'temperature': temperature,
+                        'sls_473': sls_473}
+        df = pd.DataFrame(sls_473_data,
+                          columns = ['uncle_sls_summary_id',
+                                     'temperature',
+                                     'sls_473'])
+        return df
 
     # ----------------------------------------------------------------------- #
     # DATAFRAME ASSEMBLY                                                      #
