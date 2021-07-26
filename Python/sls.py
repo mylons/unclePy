@@ -407,31 +407,24 @@ class SLS(HDF5):
 
         return df
 
-    def sls_export(self, well):
+    # ----------------------------------------------------------------------- #
+    # WRITE DATA TO POSTGRESQL                                                #
+    # ----------------------------------------------------------------------- #
+    def write_sls_summary_sql(self):
         """
-        Parameters
-        ----------
-        well : str
-            Single well name, e.g. 'A1'
-
         Returns
         -------
-        pd.DataFrame
-            Full dataframe of BCM/nm, SLS 266 nm/Count, SLS 473 nm/Count
-                for single well
-            This is comparable to an Excel tab for one well, e.g. 'A1'
+        None
         """
-        temps = self.sls_temperatures(well)
-        bcm = self.sls_export_bcm(well)
-        sls_266 = self.sls_export_266(well)
-        sls_473 = self.sls_export_473(well)
+        self.exp_confirm_created()
 
-        cols = ['temperature', 'bcm', 'sls_266', 'sls_473']
-
-        df = pd.DataFrame(data = [temps, bcm, sls_266, sls_473]).T
-        df.columns = cols
-
-        return df
+        df = self.sls_summary()
+        df.name = 'summary'
+        df = self.df_to_sql(df)
+        df.to_sql('uncle_sls_summary',
+                  self.engine,
+                  if_exists = 'append',
+                  index = False)
 
     # ----------------------------------------------------------------------- #
     # WRITE DATA TO POSTGRESQL                                                #
