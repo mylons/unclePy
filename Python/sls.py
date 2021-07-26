@@ -426,10 +426,7 @@ class SLS(HDF5):
                   if_exists = 'append',
                   index = False)
 
-    # ----------------------------------------------------------------------- #
-    # WRITE DATA TO POSTGRESQL                                                #
-    # ----------------------------------------------------------------------- #
-    def write_sls_summary_sql(self):
+    def write_sls_266_sql(self):
         """
         Returns
         -------
@@ -437,10 +434,17 @@ class SLS(HDF5):
         """
         self.exp_confirm_created()
 
-        df = self.sls_summary()
-        df.name = 'sum'
+        wells = self.wells()
+        df = pd.DataFrame(columns =
+                          ['uncle_sls_summary_id',
+                           'temperature',
+                           'sls_266'])
+        for well in wells:
+            df_266 = self.sls_266(well)
+            df = df.append(df_266).reset_index(drop = True)
+        df.name = 'sls_266'
         df = self.df_to_sql(df)
-        df.to_sql('uncle_sls',
+        df.to_sql('uncle_sls_266',
                   self.engine,
                   if_exists = 'append',
                   index = False)
