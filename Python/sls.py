@@ -449,6 +449,29 @@ class SLS(HDF5):
                   if_exists = 'append',
                   index = False)
 
+    def write_sls_473_sql(self):
+        """
+        Returns
+        -------
+        None
+        """
+        self.exp_confirm_created()
+
+        wells = self.wells()
+        df = pd.DataFrame(columns =
+                          ['uncle_sls_summary_id',
+                           'temperature',
+                           'sls_473'])
+        for well in wells:
+            df_473 = self.sls_473(well)
+            df = df.append(df_473).reset_index(drop = True)
+        df.name = 'sls_473'
+        df = self.df_to_sql(df)
+        df.to_sql('uncle_sls_473',
+                  self.engine,
+                  if_exists = 'append',
+                  index = False)
+
 
 """
 h5 = SLS('/Users/jmiller/Desktop/UNcle Files/uni files/210602-01-Seq1 Cas9-pH003R.uni')
