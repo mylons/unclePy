@@ -281,7 +281,7 @@ class SLS(HDF5):
                                      'bcm'])
         return df
 
-    def sls_export_266(self, well):
+    def sls_266(self, well):
         """
         Parameters
         ----------
@@ -294,9 +294,17 @@ class SLS(HDF5):
             SLS 266 nm/Count for single well with temperature
         """
         well_num = self.well_name_to_num(well)
+        temperature = self.sls_temperature(well)
         sls_266 = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['SLS266'][:]
-        return sls_266
+        sls_266_data = {'uncle_sls_summary_id': self.well_id_to_summary(well),
+                        'temperature': temperature,
+                        'sls_266': sls_266}
+        df = pd.DataFrame(sls_266_data,
+                          columns = ['uncle_sls_summary_id',
+                                     'temperature',
+                                     'sls_266'])
+        return df
 
     def sls_473(self, well):
         """
