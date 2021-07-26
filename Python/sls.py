@@ -265,13 +265,21 @@ class SLS(HDF5):
 
         Returns
         -------
-        np.array
-            BCM/nm for single well
+        pd.DataFrame
+            BCM/nm for single well with temperature
         """
         well_num = self.well_name_to_num(well)
-        bcm = self.file['Application1']['Run1'][well_num] \
+        temperature = self.sls_temperature(well)
+        sls_bcm = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['BCM'][:]
-        return bcm
+        sls_bcm_data = {'uncle_sls_summary_id': self.well_id_to_summary(well),
+                        'temperature': temperature,
+                        'bcm': sls_bcm}
+        df = pd.DataFrame(sls_bcm_data,
+                          columns = ['uncle_sls_summary_id',
+                                     'temperature',
+                                     'bcm'])
+        return df
 
     def sls_export_266(self, well):
         """
