@@ -31,6 +31,9 @@ class HDF5:
 
     Methods
     -------
+    exp_set_id()
+        Returns database ID for associated experiment set
+
     exp_file_name()
         Returns name of file associated with experiment
 
@@ -133,6 +136,21 @@ class HDF5:
     # ----------------------------------------------------------------------- #
     # EXPERIMENT METADATA                                                     #
     # ----------------------------------------------------------------------- #
+    def exp_set_id(self):
+        """
+        Returns
+        -------
+        int
+            Database ID for associated experiment set
+        """
+        with self.engine.connect() as con:
+            exp_set_id = con.execute("SELECT uncle_experiment_set_id "
+                                     "FROM uncle_experiments "
+                                     "WHERE id = {};".
+                                     format(self.uncle_experiment_id))
+            exp_set_id = exp_set_id.mappings().all()
+        return exp_set_id[0]['uncle_experiment_set_id']
+
     def exp_file_name(self):
         """
         Returns
@@ -371,8 +389,52 @@ class HDF5:
     # ----------------------------------------------------------------------- #
     # WRITE DATA TO POSTGRESQL                                                #
     # ----------------------------------------------------------------------- #
+    def write_exp_set_info_sql(self, datetime_needed = True):
+        """
+        Parameters
+        ----------
+        datetime_needed : bool (default = True)
+            Whether to insert "created_at", "updated_at" columns
+            These are necessary for Rails tables
+
+        Returns
+        -------
+        None
+        """
+        if self.exp_product_exists():
+            product_id = self.exp_product_exists()
+        # Write product info if it does not exist
+        else:
+            self.write_product_info_sql()
+            product_id = self.exp_product_exists()
+
+        exp_set_info = {'name': [self.exp_name()],
+                        'product_id': product_id,
+                        'exp_type': [self.exp_plate_type()],
+                        'plate_generation': [self.exp_generation()]}
+        df = pd.DataFrame(exp_set_info)
+        if datetime_needed:
+            df = add_datetime(df)
+        update_params = df.to_dict('records')[0]
+
+        with self.engine.connect() as con:
+            con.execute("UPDATE uncle_experiment_sets SET "
+                        "name = '{}', "
+                        "product_id = '{}', "
+                        "exp_type = '{}', "
+                        "plate_generation = '{}', "
+                        "created_at = '{}', "
+                        "updated_at = '{}' "
+                        "WHERE id = {};".format(
+                            update_params['name'],
+                            update_params['product_id'],
+                            update_params['exp_type'],
+                            update_params['plate_generation'],
+                            update_params['created_at'],
+                            update_params['updated_at'],
+                            self.exp_set_id()))
+
     def write_exp_info_sql(self, datetime_needed = True):
-        # TODO need to update this with well set
         """
         Parameters
         ----------
@@ -385,9 +447,12 @@ class HDF5:
         None
         """
         with self.engine.connect() as con:
-            exp_id = con.execute("SELECT id FROM uncle_experiments "
-                                 "WHERE name = '{}';".
-                                 format(self.exp_name()))
+            exp_id = con.execute("SELECT id "
+                                 "FROM uncle_experiments "
+                                 "WHERE uncle_experiment_set_id = '{}' "
+                                 "AND plate_side = '{}';".format(
+                                     self.exp_set_id(),
+                                     self.exp_plate_side()))
             exp_id = exp_id.mappings().all()
         if exp_id:
             return
@@ -399,20 +464,10 @@ class HDF5:
             self.write_instrument_info_sql()
             inst_id = self.exp_instrument_exists()
 
-        if self.exp_product_exists():
-            prod_id = self.exp_product_exists()
-        # Write product info if it does not exist
-        else:
-            self.write_product_info_sql()
-            prod_id = self.exp_product_exists()
-
-        exp_info = {'name': [self.exp_name()],
-                    'date': [self.exp_date()],
+        exp_info = {'uncle_experiment_set_id': self.exp_set_id(),
                     'uncle_instrument_id': inst_id,
-                    'product_id': prod_id,
-                    'exp_type': [self.exp_plate_type()],
-                    'plate_generation': [self.exp_generation()],
-                    'plate_side': [self.exp_plate_side()]}
+                    'plate_side': [self.exp_plate_side()],
+                    'date': [self.exp_date()]}
         df = pd.DataFrame(exp_info)
         if datetime_needed:
             df = add_datetime(df)
@@ -420,23 +475,17 @@ class HDF5:
 
         with self.engine.connect() as con:
             con.execute("UPDATE uncle_experiments SET "
-                        "name = '{}',"
-                        "date = '{}',"
+                        "uncle_experiment_set_id = {},"
                         "uncle_instrument_id = '{}',"
-                        "product_id = '{}',"
-                        "exp_type = '{}',"
-                        "plate_generation = '{}',"
                         "plate_side = '{}',"
+                        "date = '{}',"
                         "created_at = '{}',"
                         "updated_at = '{}'"
                         "WHERE id = {};".format(
-                            update_params['name'],
-                            update_params['date'],
+                            update_params['uncle_experiment_set_id'],
                             update_params['uncle_instrument_id'],
-                            update_params['product_id'],
-                            update_params['exp_type'],
-                            update_params['plate_generation'],
                             update_params['plate_side'],
+                            update_params['date'],
                             update_params['created_at'],
                             update_params['updated_at'],
                             self.uncle_experiment_id
