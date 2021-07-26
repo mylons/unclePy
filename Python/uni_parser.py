@@ -17,8 +17,8 @@ parser.add_argument('well_set_id',
 args = parser.parse_args()
 
 if __name__ == '__main__':
-    sls = SLS(args.uni_file, args.uncle_experiment_id)
-    dls = DLS(args.uni_file, args.uncle_experiment_id)
+    dls = DLS(args.uni_file, args.uncle_experiment_id, args.well_set_id)
+    sls = SLS(args.uni_file, args.uncle_experiment_id, args.well_set_id)
 
     dls.write_dls_summary_sql()
     dls.write_dls_correlation_sql()
