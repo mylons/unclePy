@@ -21,3 +21,6 @@ if __name__ == '__main__':
     dls = DLS(args.uni_file, args.uncle_experiment_id)
 
     dls.write_dls_summary_sql()
+    dls.write_dls_correlation_sql()
+    dls.write_dls_intensity_sql()
+    dls.write_dls_mass_sql()
