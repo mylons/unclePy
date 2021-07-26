@@ -40,15 +40,6 @@ class SLS(HDF5):
     sls_summary_tagg473(well)
         Returns T_agg 473 for single well
 
-    sls_bundle_bcm(well)
-        Returns BCM/nm at all temperatures for single well
-
-    sls_bundle_266(well)
-        Returns SLS 266 nm/Count at all temperatures for single well
-
-    sls_bundle_473(well)
-        Returns SLS 473 nm/Count at all temperatures for single well
-
     sls_spec_well(well)
         Returns pd.DataFrame of intensities for single well
 
@@ -71,10 +62,6 @@ class SLS(HDF5):
 
     write_sls_summary_sql(username, password, host, database)
         Saves summary data to PostgreSQL database
-
-    write_sls_bundle_sql(username, password, host, database)
-        Saves BCM/nm, SLS 266 nm/Count, SLS 473 nm/Count (at temperature) data
-        to PostgreSQL database
     """
 
     def __init__(self, file_path, uncle_experiment_id):
@@ -422,26 +409,6 @@ class SLS(HDF5):
 
         return df
 
-    def sls_bundle(self, well):
-        """
-        NOTE: the bundle file is identical to the "SLS export" file so this
-              method simply calls self.sls_export()
-
-        Parameters
-        ----------
-        well : str
-            Single well name, e.g. 'A1'
-
-        Returns
-        -------
-        pd.DataFrame
-            Full dataframe of BCM/nm, SLS 266 nm/Count, SLS 473 nm/Count
-                for single well
-            This is comparable to an Excel tab for one well, e.g. 'A1'
-        """
-        df = self.sls_export(well)
-        return df
-
     # ----------------------------------------------------------------------- #
     # WRITE DATA TO POSTGRESQL                                                #
     # ----------------------------------------------------------------------- #
@@ -460,26 +427,6 @@ class SLS(HDF5):
                   self.engine,
                   if_exists = 'append',
                   index = False)
-
-    def write_sls_bundle_sql(self):
-        """
-        Parameters
-        ----------
-        Returns
-        -------
-        None
-        """
-        self.exp_confirm_created()
-
-        wells = self.wells()
-        for well in wells:
-            df = self.sls_bundle(well)
-            df.name = 'bundle'
-            df = self.df_to_sql(df, well = well)
-            df.to_sql('uncle_sls',
-                      self.engine,
-                      if_exists = 'append',
-                      index = False)
 
 
 """
