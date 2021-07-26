@@ -7,7 +7,6 @@ from sqlalchemy import create_engine
 
 
 class HDF5:
-    # TODO insert more assertions for code checking
     # TODO either add more "examples" or remove some - make more consistent
 
     """
@@ -25,6 +24,10 @@ class HDF5:
     ----------
     file_path : str
         .uni (HDF5) file to load
+    uncle_experiment_id : int
+        Database ID for UNcle experiment
+    well_set_id : int
+        Database ID for associated well set
 
     Methods
     -------
@@ -88,13 +91,15 @@ class HDF5:
         Returns sample names/descriptions
 
     """
-    def __init__(self, file_path, uncle_experiment_id, well_set_id,
-                 username, password, host, database):
+    def __init__(self, file_path, uncle_experiment_id, well_set_id):
         self.file = h5py.File(file_path, 'r')
         self.uncle_experiment_id = uncle_experiment_id
         self.well_set_id = well_set_id
         self.engine = create_engine('postgresql://{}:{}@{}:5432/{}'.
-                                    format(username, password, host, database))
+                                    format('postgres',
+                                           '',
+                                           'localhost',
+                                           'ebase_dev'))
 
     def exp_file_name(self):
         """
@@ -412,8 +417,6 @@ class HDF5:
             else:
                 self.write_exp_info_sql()
                 df['uncle_experiment_id'] = self.exp_name_exists()
-        elif df.name == 'dls_correlation':
-            df['uncle_dls_summary_id']
 
         return df
 
