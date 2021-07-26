@@ -536,9 +536,21 @@ class HDF5:
         --------
         np.array(['0.1 mg/ml Uni A1', '0.1 mg/ml Uni B1', ...])
         """
+        if self.exp_plate_side() == 'L':
+            mapping = self.mapping_L
+        elif self.exp_plate_side() == 'R':
+            mapping = self.mapping_R
+        else:
+            raise AttributeError('Cannot determine plate side for well '
+                                 'mapping.')
         samples = []
+
         for i in self.file['Application1']['Run1']['SampleData']:
-            samples = np.append(samples, i[1].decode('utf-8'))
+            sample_name = i[1].decode('utf-8').split(' ')
+            sample = sample_name[-1]
+            corrected_sample_name = [mapping[sample] if i == sample
+                                     else i for i in sample_name]
+            samples = np.append(samples, ' '.join(corrected_sample_name))
         return samples
 
 
