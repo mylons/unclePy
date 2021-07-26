@@ -761,6 +761,28 @@ class DLS(HDF5):
                   if_exists = 'append',
                   index = False)
 
+    def write_dls_mass_sql(self):
+        """
+        Returns
+        -------
+        None
+        """
+        self.exp_confirm_created()
+
+        wells = self.wells()
+        df = pd.DataFrame(columns =
+                          ['uncle_dls_summary_id', 'hydrodynamic_diameter',
+                           'amplitude'])
+        for well in wells:
+            mass_df = self.dls_mass(well)
+            df = df.append(mass_df).reset_index(drop = True)
+        df.name = 'dls_mass'
+        df = self.df_to_sql(df)
+        df.to_sql('uncle_dls_mass',
+                  self.engine,
+                  if_exists = 'append',
+                  index = False)
+
 
 def func(x, a, b):
     return a * np.exp(b * x)
