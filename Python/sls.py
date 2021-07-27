@@ -410,22 +410,6 @@ class SLS(HDF5):
     # ----------------------------------------------------------------------- #
     # WRITE DATA TO POSTGRESQL                                                #
     # ----------------------------------------------------------------------- #
-    def write_sls_summary_sql(self):
-        """
-        Returns
-        -------
-        None
-        """
-        self.exp_confirm_created()
-
-        df = self.sls_summary()
-        df.name = 'summary'
-        df = self.df_to_sql(df)
-        df.to_sql('uncle_summary',
-                  self.engine,
-                  if_exists = 'append',
-                  index = False)
-
     def write_sls_266_sql(self):
         """
         Returns

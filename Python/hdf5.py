@@ -538,6 +538,22 @@ class HDF5:
         df = pd.DataFrame(prod_info)
         df.to_sql('products', self.engine, if_exists = 'append', index = False)
 
+    def write_summary_sql(self, df):
+        """
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Combined SLS and DLS summary tables
+
+        Returns
+        -------
+        None
+        """
+        df.to_sql('uncle_summary',
+                  self.engine,
+                  if_exists = 'append',
+                  index = False)
+
     def df_to_sql(self, df, well = None):
         """
         Parameters

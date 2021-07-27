@@ -709,22 +709,6 @@ class DLS(HDF5):
     # ----------------------------------------------------------------------- #
     # WRITE DATA TO POSTGRESQL                                                #
     # ----------------------------------------------------------------------- #
-    def write_dls_summary_sql(self):
-        """
-        Returns
-        -------
-        None
-        """
-        self.exp_confirm_created()
-
-        df = self.dls_summary()
-        df.name = 'summary'
-        df = self.df_to_sql(df)
-        df.to_sql('uncle_summary',
-                  self.engine,
-                  if_exists = 'append',
-                  index = False)
-
     def write_dls_correlation_sql(self):
         """
         Returns
