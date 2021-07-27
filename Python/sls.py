@@ -272,11 +272,11 @@ class SLS(HDF5):
         temperature = self.sls_temperature(well)
         sls_bcm = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['BCM'][:]
-        sls_bcm_data = {'uncle_sls_summary_id': self.well_name_to_summary(well),
+        sls_bcm_data = {'uncle_summary_id': self.well_name_to_summary(well),
                         'temperature': temperature,
                         'bcm': sls_bcm}
         df = pd.DataFrame(sls_bcm_data,
-                          columns = ['uncle_sls_summary_id',
+                          columns = ['uncle_summary_id',
                                      'temperature',
                                      'bcm'])
         return df
@@ -297,11 +297,11 @@ class SLS(HDF5):
         temperature = self.sls_temperature(well)
         sls_266 = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['SLS266'][:]
-        sls_266_data = {'uncle_sls_summary_id': self.well_name_to_summary(well),
+        sls_266_data = {'uncle_summary_id': self.well_name_to_summary(well),
                         'temperature': temperature,
                         'sls_266': sls_266}
         df = pd.DataFrame(sls_266_data,
-                          columns = ['uncle_sls_summary_id',
+                          columns = ['uncle_summary_id',
                                      'temperature',
                                      'sls_266'])
         return df
@@ -322,11 +322,11 @@ class SLS(HDF5):
         temperature = self.sls_temperature(well)
         sls_473 = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['SLS473'][:]
-        sls_473_data = {'uncle_sls_summary_id': self.well_name_to_summary(well),
+        sls_473_data = {'uncle_summary_id': self.well_name_to_summary(well),
                         'temperature': temperature,
                         'sls_473': sls_473}
         df = pd.DataFrame(sls_473_data,
-                          columns = ['uncle_sls_summary_id',
+                          columns = ['uncle_summary_id',
                                      'temperature',
                                      'sls_473'])
         return df
@@ -421,7 +421,7 @@ class SLS(HDF5):
         df = self.sls_summary()
         df.name = 'summary'
         df = self.df_to_sql(df)
-        df.to_sql('uncle_sls_summary',
+        df.to_sql('uncle_summary',
                   self.engine,
                   if_exists = 'append',
                   index = False)
@@ -436,7 +436,7 @@ class SLS(HDF5):
 
         wells = self.wells()
         df = pd.DataFrame(columns =
-                          ['uncle_sls_summary_id',
+                          ['uncle_summary_id',
                            'temperature',
                            'sls_266'])
         for well in wells:
@@ -459,7 +459,7 @@ class SLS(HDF5):
 
         wells = self.wells()
         df = pd.DataFrame(columns =
-                          ['uncle_sls_summary_id',
+                          ['uncle_summary_id',
                            'temperature',
                            'sls_473'])
         for well in wells:
@@ -482,7 +482,7 @@ class SLS(HDF5):
 
         wells = self.wells()
         df = pd.DataFrame(columns =
-                          ['uncle_sls_summary_id',
+                          ['uncle_summary_id',
                            'temperature',
                            'bcm'])
         for well in wells:

@@ -137,7 +137,7 @@ class DLS(HDF5):
         # Swap columns to align with typical export
         corr = corr[:, [1, 0]]
         df = pd.DataFrame(corr, columns = ['time', 'amplitude'])
-        df['uncle_dls_summary_id'] = self.well_name_to_summary(well)
+        df['uncle_summary_id'] = self.well_name_to_summary(well)
         return df
 
     def dls_intensity(self, well):
@@ -159,7 +159,7 @@ class DLS(HDF5):
         inten[:, 0] *= self.factor
         df = pd.DataFrame(inten, columns = ['hydrodynamic_diameter',
                                             'amplitude'])
-        df['uncle_dls_summary_id'] = self.well_name_to_summary(well)
+        df['uncle_summary_id'] = self.well_name_to_summary(well)
         return df
 
     def dls_mass(self, well):
@@ -719,7 +719,7 @@ class DLS(HDF5):
         df = self.dls_summary()
         df.name = 'summary'
         df = self.df_to_sql(df)
-        df.to_sql('uncle_dls_summary',
+        df.to_sql('uncle_summary',
                   self.engine,
                   if_exists = 'append',
                   index = False)
@@ -734,7 +734,7 @@ class DLS(HDF5):
 
         wells = self.wells()
         df = pd.DataFrame(columns =
-                          ['uncle_dls_summary_id', 'time', 'amplitude'])
+                          ['uncle_summary_id', 'time', 'amplitude'])
         for well in wells:
             df_corr = self.dls_correlation(well)
             df = df.append(df_corr).reset_index(drop = True)
@@ -755,7 +755,7 @@ class DLS(HDF5):
 
         wells = self.wells()
         df = pd.DataFrame(columns =
-                          ['uncle_dls_summary_id',
+                          ['uncle_summary_id',
                            'hydrodynamic_diameter',
                            'amplitude'])
         for well in wells:
@@ -778,7 +778,8 @@ class DLS(HDF5):
 
         wells = self.wells()
         df = pd.DataFrame(columns =
-                          ['uncle_dls_summary_id', 'hydrodynamic_diameter',
+                          ['uncle_summary_id',
+                           'hydrodynamic_diameter',
                            'amplitude'])
         for well in wells:
             df_mass = self.dls_mass(well)

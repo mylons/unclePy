@@ -613,7 +613,8 @@ class HDF5:
         if well[0].isalpha():
             well = self.well_name_to_id(well)
         with self.engine.connect() as con:
-            summary_id = con.execute("SELECT id FROM uncle_dls_summary "
+            summary_id = con.execute("SELECT id "
+                                     "FROM uncle_summary "
                                      "WHERE well_id = {};".format(well))
             summary_id = summary_id.mappings().all()
         return summary_id[0]['id']
