@@ -181,6 +181,7 @@ class DLS(HDF5):
         mass[:, 0] *= self.factor
         df = pd.DataFrame(mass, columns = ['hydrodynamic_diameter',
                                            'amplitude'])
+        df['uncle_summary_id'] = self.well_name_to_summary(well)
         return df
 
     # ----------------------------------------------------------------------- #
