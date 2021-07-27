@@ -7,8 +7,6 @@ from sqlalchemy import create_engine
 
 
 class HDF5:
-    # TODO either add more "examples" or remove some - make more consistent
-
     """
     Generic class to load .uni (HDF5) files
 
@@ -310,13 +308,21 @@ class HDF5:
     # ----------------------------------------------------------------------- #
     # EXPERIMENT CHECKS                                                       #
     # ----------------------------------------------------------------------- #
-    def exp_exists(self):
-        # TODO may need to look at more than just name e.g. plate side
-
+    def exp_set_exists(self):
         """
-        NOTE: This checks if the name of the experiment already exists
-              It does not make any checks on the experiment ID
+        Returns
+        -------
+        int or False
+            int: experiment set ID, if it exists
+            False: if experiment set does not exist
+        """
+        if self.exp_set_id():
+            return self.exp_set_id()
+        else:
+            return False
 
+    def exp_exists(self):
+        """
         Returns
         -------
         int or False
