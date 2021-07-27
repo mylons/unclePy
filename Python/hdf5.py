@@ -308,26 +308,12 @@ class HDF5:
     # ----------------------------------------------------------------------- #
     # EXPERIMENT CHECKS                                                       #
     # ----------------------------------------------------------------------- #
-    def exp_set_exists(self):
+    def get_exp(self):
         """
         Returns
         -------
-        int or False
-            int: experiment set ID, if it exists
-            False: if experiment set does not exist
-        """
-        if self.exp_set_id():
-            return self.exp_set_id()
-        else:
-            return False
-
-    def exp_exists(self):
-        """
-        Returns
-        -------
-        int or False
-            int: experiment ID, if it exists
-            False: if experiment does not exist
+        int
+            Experiment ID, if it exists
         """
         with self.engine.connect() as con:
             exp_id = con.execute("SELECT id "
@@ -337,9 +323,21 @@ class HDF5:
                                      self.exp_set_id(),
                                      self.exp_plate_side()))
             exp_id = exp_id.mappings().all()
-
         if exp_id:
             return exp_id[0]['id']
+        else:
+            return
+
+    def exp_exists(self):
+        """
+        Returns
+        -------
+        bool
+            True: if experiment exists
+            False: if experiment does not exist
+        """
+        if self.get_exp():
+            return True
         else:
             return False
 
@@ -350,29 +348,43 @@ class HDF5:
         None
         """
         with self.engine.connect() as con:
-            exp = con.execute("SELECT id FROM uncle_experiments "
+            exp = con.execute("SELECT id "
+                              "FROM uncle_experiments "
                               "WHERE id = '{}';".
                               format(self.uncle_experiment_id))
             exp = exp.mappings().all()
         assert exp, 'Could not find UNcle experiment. ' \
                     'Confirm experiment has been created.'
 
-    def exp_instrument_exists(self):
+    def get_exp_instrument(self):
         """
         Returns
         -------
-        int or False
-            int: instrument ID, if it exists
-            False: if experiment instrument does not exist
+        int
+            Instrument ID, if it exists
         """
         with self.engine.connect() as con:
-            inst_id = con.execute("SELECT id FROM uncle_instruments "
+            inst_id = con.execute("SELECT id "
+                                  "FROM uncle_instruments "
                                   "WHERE id = '{}';".
                                   format(self.exp_inst_num()))
             inst_id = inst_id.mappings().all()
 
         if inst_id:
             return inst_id[0]['id']
+        else:
+            return
+
+    def exp_instrument_exists(self):
+        """
+        Returns
+        -------
+        bool
+            True: if instrument exists
+            False: if instrument does not exist
+        """
+        if self.get_exp_instrument():
+            return True
         else:
             return False
 
@@ -459,11 +471,11 @@ class HDF5:
             return
 
         if self.exp_instrument_exists():
-            inst_id = self.exp_instrument_exists()
+            inst_id = self.get_exp_instrument()
         # Write instrument info if it does not exist
         else:
             self.write_instrument_info_sql()
-            inst_id = self.exp_instrument_exists()
+            inst_id = self.get_exp_instrument()
 
         exp_info = {'uncle_experiment_set_id': self.exp_set_id(),
                     'uncle_instrument_id': inst_id,
@@ -574,11 +586,11 @@ class HDF5:
 
         if df.name == 'summary':
             if self.exp_exists():
-                df['uncle_experiment_id'] = self.exp_exists()
+                df['uncle_experiment_id'] = self.get_exp()
             # Write experimental info if it does not exist
             else:
                 self.write_exp_info_sql()
-                df['uncle_experiment_id'] = self.exp_exists()
+                df['uncle_experiment_id'] = self.get_exp()
 
         return df
 
