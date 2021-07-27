@@ -64,7 +64,7 @@ class HDF5:
     samples()
         Returns sample names/descriptions
 
-    exp_name_exists()
+    exp_exists()
         Returns experiment ID if it exists, otherwise returns False
 
     exp_confirm_created()
@@ -310,7 +310,7 @@ class HDF5:
     # ----------------------------------------------------------------------- #
     # EXPERIMENT CHECKS                                                       #
     # ----------------------------------------------------------------------- #
-    def exp_name_exists(self):
+    def exp_exists(self):
         # TODO may need to look at more than just name e.g. plate side
 
         """
@@ -324,9 +324,12 @@ class HDF5:
             False: if experiment does not exist
         """
         with self.engine.connect() as con:
-            exp_id = con.execute("SELECT id FROM uncle_experiments "
-                                 "WHERE name = '{}';".
-                                 format(self.exp_name()))
+            exp_id = con.execute("SELECT id "
+                                 "FROM uncle_experiments "
+                                 "WHERE uncle_experiment_set_id = '{}' "
+                                 "AND plate_side = '{}';".format(
+                                     self.exp_set_id(),
+                                     self.exp_plate_side()))
             exp_id = exp_id.mappings().all()
 
         if exp_id:
@@ -446,15 +449,7 @@ class HDF5:
         -------
         None
         """
-        with self.engine.connect() as con:
-            exp_id = con.execute("SELECT id "
-                                 "FROM uncle_experiments "
-                                 "WHERE uncle_experiment_set_id = '{}' "
-                                 "AND plate_side = '{}';".format(
-                                     self.exp_set_id(),
-                                     self.exp_plate_side()))
-            exp_id = exp_id.mappings().all()
-        if exp_id:
+        if self.exp_exists():
             return
 
         if self.exp_instrument_exists():
@@ -555,12 +550,12 @@ class HDF5:
             df['well'] = well
 
         if df.name == 'summary':
-            if self.exp_name_exists():
-                df['uncle_experiment_id'] = self.exp_name_exists()
+            if self.exp_exists():
+                df['uncle_experiment_id'] = self.exp_exists()
             # Write experimental info if it does not exist
             else:
                 self.write_exp_info_sql()
-                df['uncle_experiment_id'] = self.exp_name_exists()
+                df['uncle_experiment_id'] = self.exp_exists()
 
         return df
 
