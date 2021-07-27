@@ -17,9 +17,11 @@ parser.add_argument('well_set_id',
 args = parser.parse_args()
 
 if __name__ == '__main__':
+    hdf = HDF5(args.uni_file, args.uncle_experiment_id, args.well_set_id)
     dls = DLS(args.uni_file, args.uncle_experiment_id, args.well_set_id)
     sls = SLS(args.uni_file, args.uncle_experiment_id, args.well_set_id)
 
+    hdf.write_exp_set_info_sql()
     dls.write_dls_summary_sql()
     dls.write_dls_correlation_sql()
     dls.write_dls_intensity_sql()
