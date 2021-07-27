@@ -690,16 +690,3 @@ def verify(value):
         return value
     else:
         return np.nan
-
-
-"""
-h1 = HDF5('/Users/jmiller/Desktop/UNcle Files/uni files/210602-01-Seq1 Cas9-pH003R.uni', 71)
-h2 = HDF5('/Users/jmiller/Desktop/UNcle Files/uni files/Gen6 uni 1,2,3.uni', 72)
-save_path = '/Users/jmiller/Desktop/UNcle Files/Misc/uncle_out.xlsx'
-engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format('postgres', '', 'localhost', 'ebase_dev'))
-
-Gen6 1,2,3 = 210607-01-T4 RNA Ligase-Gen006L
-Gen6 4,5,6 = 210607-01-T4 RNA Ligase – Gen006R
-pH 1,2,3 = 210608-01-T4 RNA Ligase-pH003L
-pH 4,5 = 210608-01-T4 RNA Ligase-pH003R
-"""

@@ -792,10 +792,3 @@ def test_overlay(time_rel, true_values, residuals = None):
     else:
         ax1.plot(time_rel, true_values, time_rel, calc_vals)
     plt.show()
-
-
-"""
-h3 = DLS('/Users/jmiller/Desktop/UNcle Files/uni files/210602-01-Seq1 Cas9-pH003R.uni')
-h4 = DLS('/Users/jmiller/Desktop/UNcle Files/uni files/Gen6 uni 1,2,3.uni')
-save_directory = '/Users/jmiller/Desktop/UNcle Files/Misc/'
-"""
