@@ -499,7 +499,8 @@ class HDF5:
         None
         """
         with self.engine.connect() as con:
-            inst_id = con.execute("SELECT id FROM uncle_instruments "
+            inst_id = con.execute("SELECT id "
+                                  "FROM uncle_instruments "
                                   "WHERE id = '{}';".
                                   format(self.exp_inst_num()))
             inst_id = inst_id.mappings().all()
