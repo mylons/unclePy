@@ -403,13 +403,12 @@ class HDF5:
         else:
             return False
 
-    def exp_product_exists(self):
+    def get_exp_product(self):
         """
         Returns
         -------
-        int or False
-            int: product ID, if it exists
-            False: if product does not exist
+        int
+            Product ID, if it exists
         """
         with self.engine.connect() as con:
             prod_id = con.execute("SELECT id "
@@ -420,6 +419,19 @@ class HDF5:
 
         if prod_id:
             return prod_id[0]['id']
+        else:
+            return False
+
+    def exp_product_exists(self):
+        """
+        Returns
+        -------
+        int or False
+            int: product ID, if it exists
+            False: if product does not exist
+        """
+        if self.get_exp_product():
+            return True
         else:
             return False
 
@@ -439,11 +451,11 @@ class HDF5:
         None
         """
         if self.exp_product_exists():
-            product_id = self.exp_product_exists()
+            product_id = self.get_exp_product()
         # Write product info if it does not exist
         else:
             self.write_product_info_sql()
-            product_id = self.exp_product_exists()
+            product_id = self.get_exp_product()
 
         exp_set_info = {'name': [self.exp_name()],
                         'product_id': product_id,
