@@ -397,7 +397,8 @@ class HDF5:
             False: if product does not exist
         """
         with self.engine.connect() as con:
-            prod_id = con.execute("SELECT id FROM products "
+            prod_id = con.execute("SELECT id "
+                                  "FROM products "
                                   "WHERE name = '{}';".
                                   format(self.exp_product()))
             prod_id = prod_id.mappings().all()
