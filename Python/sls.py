@@ -111,56 +111,6 @@ class SLS(HDF5):
         return times
 
     # ----------------------------------------------------------------------- #
-    # DATA COLLECTION FOR SLS SPEC                                            #
-    # ----------------------------------------------------------------------- #
-    def sls_spec_wavelengths(self, well):
-        """
-        Parameters
-        ----------
-        well : str
-            Single well name, e.g. 'A1'
-
-        Returns
-        -------
-        np.array
-            Wavelengths used in SLS analysis for single well
-        """
-        well_num = self.well_name_to_num(well)
-        wavelengths = self.file['Application1']['Run1'][well_num] \
-            ['Fluor_SLS_Data']['CorrectedSpectra']['0001'][:, 0]
-        return wavelengths
-
-    def sls_spec_intensity(self, well, temp):
-        """
-        Parameters
-        ----------
-        well : str
-            Single well name, e.g. 'A1'
-        temp : float
-            Single temperature value from file
-            Does a direct lookup so value should be taken directly from file
-
-        Returns
-        -------
-        np.array
-            Intensities for a single temp of single well
-        """
-        well_num = self.well_name_to_num(well)
-        temps = self.sls_temperature(well)
-        # Cannot index into HDF5 dataset, therefore need to call with dict key
-        index = np.flatnonzero(temps == temp)[0]
-        inten_cnt = f'{index + 1:04}'
-
-        inten_meas = self.file['Application1']['Run1'][well_num] \
-            ['Fluor_SLS_Data']['CorrectedSpectra'][inten_cnt]
-
-        # Assert we are looking at correct well, temp, etc.
-        np.testing.assert_array_equal(inten_meas[:, 0],
-                                      self.sls_spec_wavelengths(well))
-
-        return inten_meas[:, 1]
-
-    # ----------------------------------------------------------------------- #
     # DATA COLLECTION FOR SLS SUMMARY                                         #
     # ----------------------------------------------------------------------- #
     @staticmethod
@@ -331,37 +281,6 @@ class SLS(HDF5):
     # ----------------------------------------------------------------------- #
     # DATAFRAME ASSEMBLY                                                      #
     # ----------------------------------------------------------------------- #
-    def sls_spec_well(self, well):
-        """
-        Parameters
-        ----------
-        well : str
-            Single well name, e.g. 'A1'
-
-        Returns
-        -------
-        pd.DataFrame
-            Full dataframe of SLS intensities for single well
-            This is comparable to an Excel tab for one well, e.g. 'A1'
-        """
-        temps = self.sls_temperature(well)
-        times = self.sls_times(well)
-        waves = self.sls_spec_wavelengths(well)
-        inten = [pd.Series(self.sls_spec_intensity(well, temp))
-                 for temp in temps]
-
-        # NOTE: inconsistent whitespace here is purposeful to match file
-        cols = [f'Temp :{temps[i]:02f}, Time:{times[i]:.1f}'
-                for i in range(len(temps))]
-
-        # Transpose due to the way dataframe is compiled
-        df = pd.DataFrame(data = inten).T
-        df.columns = cols
-        df.index = waves
-        df.index.name = 'Wavelength'
-
-        return df
-
     def sls_summary(self):
         """
         Returns
