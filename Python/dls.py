@@ -96,17 +96,14 @@ class DLS(HDF5):
     dls_summary()
         Returns pd.DataFrame of summary for entire experiment
 
-    write_dls_summary_sql(username, password, host, database)
-        Saves summary data to PostgreSQL database
-
     write_dls_correlation_sql()
-        Saves correlation data for all wells to PostgreSQL database
+        Writes correlation data for all wells to PostgreSQL database
 
     write_dls_intensity_sql()
-        Saves intensity data for all wells to PostgreSQL database
+        Writes intensity data for all wells to PostgreSQL database
 
     write_dls_mass_sql()
-        Saves mass data for all wells to PostgreSQL database
+        Writes mass data for all wells to PostgreSQL database
     """
 
     def __init__(self, file_path, uncle_experiment_id, well_set_id):
@@ -513,7 +510,8 @@ class DLS(HDF5):
         """
         Returns
         -------
-        TODO: need to figure this out ASAP
+        TODO: still need to figure out and implement
+        Can potentially find AUC for each peak in mass distribution
         """
         return pd.Series(np.nan)
 

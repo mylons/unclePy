@@ -16,14 +16,8 @@ class SLS(HDF5):
     sls_temperature(well)
         Returns temperature used for single well
 
-    sls_spec_times(well)
+    sls_times(well)
         Returns times used for single well
-
-    sls_spec_wavelengths(well)
-        Returns wavelengths used for single well
-
-    sls_spec_intensity(well, temp)
-        Returns intensities found at a single temperature for single well
 
     sls_summary_color()
         *** Not currently implemented ***
@@ -49,9 +43,6 @@ class SLS(HDF5):
     sls_473(well)
         Returns SLS 473 nm/Count for single well with temperature
 
-    sls_spec_well(well)
-        Returns pd.DataFrame of intensities for single well
-
     sls_summary()
         Returns pd.DataFrame of summary for entire experiment
 
@@ -59,8 +50,14 @@ class SLS(HDF5):
         Returns pd.DataFrame of BCM/nm, SLS 266 nm/Count, SLS 473 nm/Count
         for single well
 
-    write_sls_summary_sql(username, password, host, database)
-        Saves summary data to PostgreSQL database
+    write_sls_266_sql()
+        Writes SLS 266 data to PostgreSQL database
+
+    write_sls_473_sql()
+        Writes SLS 473 data to PostgreSQL database
+
+    write_sls_bcm_sql()
+        Writes SLS BCM data to PostgreSQL database
     """
 
     def __init__(self, file_path, uncle_experiment_id, well_set_id):

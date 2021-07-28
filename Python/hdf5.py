@@ -35,7 +35,7 @@ class HDF5:
     exp_file_name()
         Returns name of file associated with experiment
 
-    exp_name
+    exp_name()
         Returns name of experimental run
 
     exp_date()
@@ -62,26 +62,41 @@ class HDF5:
     samples()
         Returns sample names/descriptions
 
+    get_exp()
+        Returns experiment ID, if it exists
+
     exp_exists()
-        Returns experiment ID if it exists, otherwise returns False
+        Returns T/F if experiment exists
 
     exp_confirm_created()
         Checks experiment has been saved to database. Returns nothing.
 
+    get_exp_instrument()
+        Returns instrument ID, if it exists
+
     exp_instrument_exists()
-        Returns instrument ID if it exists, otherwise returns False
+        Returns T/F if experiment exists
+
+    get_exp_product()
+        Returns product ID, if it exists
 
     exp_product_exists()
-        Returns product ID if it exists, otherwise returns False
+        Returns T/F if product exists
+
+    write_exp_set_info_sql(self, datetime_needed = True)
+        Writes experiment set metadata to PostgreSQL database
 
     write_exp_info_sql(datetime_needed)
-        Saves experiment metadata to PostgreSQL database
+        Writes experiment metadata to PostgreSQL database
 
     write_instrument_info_sql(datetime_needed)
-        Saves instrument metadata to PostgreSQL database
+        Writes instrument metadata to PostgreSQL database
 
     write_product_info_sql()
-        Saves product info metadata to PostgreSQL database
+        Writes product info metadata to PostgreSQL database
+
+    write_summary_sql(df)
+        Writes combined SLS and DLS summary data to PostgreSQL database
 
     df_to_sql(df, well)
         Returns input dataframe with additional columns added to match
