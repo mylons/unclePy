@@ -171,9 +171,13 @@ class HDF5:
         str
             Name of current run
         """
-        run_name = self.file['Application1']['Run1'].attrs['Run Name'].\
-            decode('utf-8')
-        assert run_name.count('-') == 3,\
+        file_name = self.file.filename.split('/')[-1]
+        assert file_name[-4:].lower() == '.uni', \
+            'File extension does not match [.uni]. Ensure correct file has ' \
+            'been uploaded and extension matches [.uni].'
+
+        run_name = file_name[:-4]
+        assert run_name.count('-') == 3, \
             'Incorrect file name format. Format should be: ' \
             'Date (YYMMDD) – Instrument # – Protein Name – ' \
             'Plate Type/Generation/Side'
