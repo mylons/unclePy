@@ -124,10 +124,11 @@ class HDF5:
 
         # with open("/var/www/ebase-dev/current/config/database.yml", 'r') \
         #         as stream:
-        #     username = yaml.safe_load(stream)['production']['username']
-        #     password = yaml.safe_load(stream)['production']['password']
-        #     host = yaml.safe_load(stream)['production']['host']
-        #     database = yaml.safe_load(stream)['production']['database']
+        #     info = yaml.safe_load(stream)
+        #     username = info['production']['username']
+        #     password = info['production']['password']
+        #     host = info['production']['host']
+        #     database = info['production']['database']
 
         self.engine = create_engine('postgresql://{}:{}@{}:5432/{}'.
                                     format('postgres',
