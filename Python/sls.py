@@ -203,8 +203,11 @@ class SLS(HDF5):
     # ----------------------------------------------------------------------- #
     # DATA COLLECTION FOR SLS BCM, 266, 473                                   #
     # ----------------------------------------------------------------------- #
-    def sls_bcm(self, well):
+    def bcm(self, well):
         """
+        NOTE: this info is not actually SLS-related, but is captured
+        in the SLS portion of the HDF5 file
+
         Parameters
         ----------
         well : str
@@ -217,12 +220,12 @@ class SLS(HDF5):
         """
         well_num = self.well_name_to_num(well)
         temperature = self.sls_temperature(well)
-        sls_bcm = self.file['Application1']['Run1'][well_num] \
+        bcm = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['BCM'][:]
-        sls_bcm_data = {'uncle_summary_id': self.well_name_to_summary(well),
-                        'temperature': temperature,
-                        'bcm': sls_bcm}
-        df = pd.DataFrame(sls_bcm_data,
+        bcm_data = {'uncle_summary_id': self.well_name_to_summary(well),
+                    'temperature': temperature,
+                    'bcm': bcm}
+        df = pd.DataFrame(bcm_data,
                           columns = ['uncle_summary_id',
                                      'temperature',
                                      'bcm'])
@@ -372,8 +375,11 @@ class SLS(HDF5):
                   if_exists = 'append',
                   index = False)
 
-    def write_sls_bcm_sql(self):
+    def write_bcm_sql(self):
         """
+        NOTE: this info is not actually SLS-related, but is captured
+        in the SLS portion of the HDF5 file
+
         Returns
         -------
         None
@@ -386,11 +392,11 @@ class SLS(HDF5):
                            'temperature',
                            'bcm'])
         for well in wells:
-            df_bcm = self.sls_bcm(well)
+            df_bcm = self.bcm(well)
             df = df.append(df_bcm).reset_index(drop = True)
-        df.name = 'sls_bcm'
+        df.name = 'bcm'
         df = self.df_to_sql(df)
-        df.to_sql('uncle_sls_bcms',
+        df.to_sql('uncle_dsfs',
                   self.engine,
                   if_exists = 'append',
                   index = False)
