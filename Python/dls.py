@@ -723,7 +723,7 @@ class DLS(HDF5):
             df = df.append(df_corr).reset_index(drop = True)
         df.name = 'dls_correlation'
         df = self.df_to_sql(df)
-        df.to_sql('uncle_dls_correlation',
+        df.to_sql('uncle_dls_correlations',
                   self.engine,
                   if_exists = 'append',
                   index = False)
@@ -746,7 +746,7 @@ class DLS(HDF5):
             df = df.append(df_inten).reset_index(drop = True)
         df.name = 'dls_intensity'
         df = self.df_to_sql(df)
-        df.to_sql('uncle_dls_intensity',
+        df.to_sql('uncle_dls_intensities',
                   self.engine,
                   if_exists = 'append',
                   index = False)
@@ -769,7 +769,7 @@ class DLS(HDF5):
             df = df.append(df_mass).reset_index(drop = True)
         df.name = 'dls_mass'
         df = self.df_to_sql(df)
-        df.to_sql('uncle_dls_mass',
+        df.to_sql('uncle_dls_masses',
                   self.engine,
                   if_exists = 'append',
                   index = False)

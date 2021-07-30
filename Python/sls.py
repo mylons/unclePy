@@ -344,7 +344,7 @@ class SLS(HDF5):
             df = df.append(df_266).reset_index(drop = True)
         df.name = 'sls_266'
         df = self.df_to_sql(df)
-        df.to_sql('uncle_sls_266',
+        df.to_sql('uncle_sls266s',
                   self.engine,
                   if_exists = 'append',
                   index = False)
@@ -367,7 +367,7 @@ class SLS(HDF5):
             df = df.append(df_473).reset_index(drop = True)
         df.name = 'sls_473'
         df = self.df_to_sql(df)
-        df.to_sql('uncle_sls_473',
+        df.to_sql('uncle_sls473s',
                   self.engine,
                   if_exists = 'append',
                   index = False)
@@ -390,7 +390,7 @@ class SLS(HDF5):
             df = df.append(df_bcm).reset_index(drop = True)
         df.name = 'sls_bcm'
         df = self.df_to_sql(df)
-        df.to_sql('uncle_sls_bcm',
+        df.to_sql('uncle_sls_bcms',
                   self.engine,
                   if_exists = 'append',
                   index = False)

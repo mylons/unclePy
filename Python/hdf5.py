@@ -589,7 +589,7 @@ class HDF5:
         -------
         None
         """
-        df.to_sql('uncle_summary',
+        df.to_sql('uncle_summaries',
                   self.engine,
                   if_exists = 'append',
                   index = False)
@@ -677,7 +677,7 @@ class HDF5:
             well = self.well_name_to_id(well)
         with self.engine.connect() as con:
             summary_id = con.execute("SELECT id "
-                                     "FROM uncle_summary "
+                                     "FROM uncle_summaries "
                                      "WHERE well_id = {};".format(well))
             summary_id = summary_id.mappings().all()
         return summary_id[0]['id']
