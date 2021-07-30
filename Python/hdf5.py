@@ -124,7 +124,7 @@ class HDF5:
         # with open("/var/www/ebase-dev/current/config/database.yml", 'r') \
         #         as stream:
         #     username = yaml.safe_load(stream)['production']['username']
-        #     username = yaml.safe_load(stream)['production']['password']
+        #     password = yaml.safe_load(stream)['production']['password']
         #     host = yaml.safe_load(stream)['production']['host']
         #     database = yaml.safe_load(stream)['production']['database']
 
