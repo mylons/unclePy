@@ -63,6 +63,9 @@ class HDF5:
     samples()
         Returns sample names/descriptions
 
+    well_exists(well)
+        Returns True/False if well ID exists for well
+
     get_exp()
         Returns experiment ID, if it exists
 
@@ -307,7 +310,9 @@ class HDF5:
         wells = []
         for i in self.file['Application1']['Run1']['SampleData']:
             well = i[0].decode('utf-8')
-            wells = np.append(wells, mapping[well])
+            mapped_well = mapping[well]
+            if self.well_exists(mapped_well):
+                wells = np.append(wells, mapped_well)
         return wells
 
     def samples(self):
@@ -332,11 +337,32 @@ class HDF5:
 
         for i in self.file['Application1']['Run1']['SampleData']:
             sample_name = i[1].decode('utf-8').split(' ')
-            sample = sample_name[-1]
-            corrected_sample_name = [mapping[sample] if i == sample
-                                     else i for i in sample_name]
-            samples = np.append(samples, ' '.join(corrected_sample_name))
+            well = sample_name[-1]
+            mapped_well = mapping[well]
+            if self.well_exists(mapped_well):
+                corrected_sample_name = [mapped_well if i == well
+                                         else i for i in sample_name]
+                samples = np.append(samples, ' '.join(corrected_sample_name))
         return samples
+
+    def well_exists(self, well):
+        """
+        Parameters
+        ----------
+        well : str
+            Single well name, e.g. 'A1'
+
+        Returns
+        -------
+        bool
+            True: if well ID exists for well
+            False: if well ID does not exist for well
+        """
+        try:
+            self.well_name_to_id(well)
+            return True
+        except IndexError:
+            return False
 
     # ----------------------------------------------------------------------- #
     # EXPERIMENT CHECKS                                                       #
