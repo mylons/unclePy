@@ -377,9 +377,13 @@ class HDF5:
             exp_id = con.execute("SELECT id "
                                  "FROM uncle_experiments "
                                  "WHERE uncle_experiment_set_id = '{}' "
-                                 "AND plate_side = '{}';".format(
+                                 "AND uncle_instrument_id = '{}' "
+                                 "AND plate_side = '{}' "
+                                 "AND date = '{}';".format(
                                      self.exp_set_id(),
-                                     self.exp_plate_side()))
+                                     self.get_exp_instrument(),
+                                     self.exp_plate_side(),
+                                     self.exp_date()))
             exp_id = exp_id.mappings().all()
         if exp_id:
             return exp_id[0]['id']
@@ -419,7 +423,8 @@ class HDF5:
         Returns
         -------
         int
-            Instrument ID, if it exists
+            Instrument ID: if experiment instrument exists
+            0: if experiment instrument does not exist
         """
         with self.engine.connect() as con:
             inst_id = con.execute("SELECT id "
@@ -431,7 +436,7 @@ class HDF5:
         if inst_id:
             return inst_id[0]['id']
         else:
-            return
+            return 0
 
     def exp_instrument_exists(self):
         """
