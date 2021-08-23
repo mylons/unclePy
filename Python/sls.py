@@ -141,6 +141,9 @@ class SLS(HDF5):
         --------
             np.array([42.48, 82.4 ,  0.  ,  0.  ])
         """
+        if not self.sls_analysis_exists(well):
+            return
+
         well_num = self.well_name_to_num(well)
         tms = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['Tms'][0]
@@ -158,6 +161,9 @@ class SLS(HDF5):
         float
             Tonset value for single well
         """
+        if not self.sls_analysis_exists(well):
+            return
+
         well_num = self.well_name_to_num(well)
         tonset = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['TonsetBCM'][0]
@@ -176,6 +182,9 @@ class SLS(HDF5):
         float
             Tagg266 for single well
         """
+        if not self.sls_analysis_exists(well):
+            return
+
         well_num = self.well_name_to_num(well)
         tagg266 = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['Tagg266'][0]
@@ -194,6 +203,9 @@ class SLS(HDF5):
         float
             Tagg473 for single well
         """
+        if not self.sls_analysis_exists(well):
+            return
+
         well_num = self.well_name_to_num(well)
         tagg473 = self.file['Application1']['Run1'][well_num] \
             ['Fluor_SLS_Data']['Analysis']['Tagg473'][0]
@@ -218,6 +230,9 @@ class SLS(HDF5):
         pd.DataFrame
             BCM/nm for single well with temperature
         """
+        if not self.sls_analysis_exists(well):
+            return
+
         well_num = self.well_name_to_num(well)
         temperature = self.sls_temperature(well)
         bcm = self.file['Application1']['Run1'][well_num] \
@@ -243,6 +258,9 @@ class SLS(HDF5):
         pd.DataFrame
             SLS 266 nm/Count for single well with temperature
         """
+        if not self.sls_analysis_exists(well):
+            return
+
         well_num = self.well_name_to_num(well)
         temperature = self.sls_temperature(well)
         sls_266 = self.file['Application1']['Run1'][well_num] \
@@ -268,6 +286,9 @@ class SLS(HDF5):
         pd.DataFrame
             SLS 266 nm/Count for single well with temperature
         """
+        if not self.sls_analysis_exists(well):
+            return
+
         well_num = self.well_name_to_num(well)
         temperature = self.sls_temperature(well)
         sls_473 = self.file['Application1']['Run1'][well_num] \
@@ -301,6 +322,12 @@ class SLS(HDF5):
         for well in wells:
             tm_cols = np.append(tm_cols,
                                 np.flatnonzero(self.sls_summary_tms(well)))
+
+        # If "Analysis" folder is missing from .uni file, tm_cols will result
+        # in an empty array. Skip the rest of the processing.
+        if tm_cols.size == 0:
+            return
+
         max_tm = int(np.max(tm_cols) + 1)
         cols.extend(['t_m_{}'.format(i + 1) for i in range(max_tm)])
 
@@ -400,3 +427,31 @@ class SLS(HDF5):
                   self.engine,
                   if_exists = 'append',
                   index = False)
+
+    # ----------------------------------------------------------------------- #
+    # UTILITY FUNCTIONS                                                       #
+    # ----------------------------------------------------------------------- #
+    def sls_analysis_exists(self, well):
+        """
+        Some .uni files are lacking the "Analysis" folder where majority of
+        data is captured. This method returns False if the folder is missing,
+        preventing other methods from resulting in error.
+
+        Parameters
+        ----------
+        well : str
+            Single well name, e.g. 'A1'
+
+        Returns
+        -------
+        bool
+            True: if "Analysis" folder exists
+            False: if "Analysis" folder does not exist
+        """
+        well_num = self.well_name_to_num(well)
+        try:
+            _ = self.file['Application1']['Run1'][well_num] \
+                ['Fluor_SLS_Data']['Analysis']
+            return True
+        except KeyError:
+            return False

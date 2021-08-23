@@ -25,7 +25,13 @@ if __name__ == '__main__':
 
     df_sls_summary = sls.sls_summary()
     df_dls_summary = dls.dls_summary()
-    df = df_sls_summary.combine_first(df_dls_summary)
+
+    # SLS file may be missing "Analysis" folder, therefore could error here
+    try:
+        df = df_sls_summary.combine_first(df_dls_summary)
+    except AttributeError:
+        df = df_dls_summary
+
     df.name = 'summary'
     df = hdf.df_to_sql(df)
 
