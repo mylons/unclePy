@@ -603,7 +603,8 @@ class HDF5:
             return
 
         inst_info = {'id': [int(self.exp_inst_num())],
-                     'name': ['UNcle_01'],
+                     'name': ['UNcle_{}'.format(
+                         str(self.exp_inst_num()).zfill(2))],
                      'location': ['Shnider/Hough lab'],
                      'model': ['UNcle']}
         df = pd.DataFrame(inst_info)
