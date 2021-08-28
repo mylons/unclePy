@@ -325,8 +325,12 @@ class SLS(HDF5):
 
         # If "Analysis" folder is missing from .uni file, tm_cols will result
         # in an empty array. Skip the rest of the processing.
-        if tm_cols.size == 0:
-            return
+        try:
+            if tm_cols.size == 0:
+                return
+        except AttributeError:
+            if len(tm_cols) == 0:
+                return
 
         max_tm = int(np.max(tm_cols) + 1)
         cols.extend(['t_m_{}'.format(i + 1) for i in range(max_tm)])
