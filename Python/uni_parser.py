@@ -35,10 +35,14 @@ if __name__ == '__main__':
     df.name = 'summary'
     df = hdf.df_to_sql(df)
 
-    hdf.write_summary_sql(df)
-    dls.write_dls_correlation_sql()
-    dls.write_dls_intensity_sql()
-    dls.write_dls_mass_sql()
-    sls.write_sls_266_sql()
-    sls.write_sls_473_sql()
-    sls.write_bcm_sql()
+    try:
+        hdf.write_summary_sql(df)
+        dls.write_dls_correlation_sql()
+        dls.write_dls_intensity_sql()
+        dls.write_dls_mass_sql()
+        sls.write_sls_266_sql()
+        sls.write_sls_473_sql()
+        sls.write_bcm_sql()
+        hdf.write_processing_status(status = 'complete')
+    except Exception as err:
+        hdf.write_processing_status(status = 'failed', error = err)

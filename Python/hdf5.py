@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import re
 from datetime import datetime
-from sqlalchemy import create_engine
+import sqlalchemy
 import yaml
 
 
@@ -106,6 +106,9 @@ class HDF5:
         Returns input dataframe with additional columns added to match
         associated database tables
 
+    write_processing_status(status, error)
+        Writes .uni processing status to PostgreSQL database
+
     well_name_to_num(well)
         Returns well number converted from input well name
         Example: 'A1' -> 'Well_01'
@@ -132,11 +135,11 @@ class HDF5:
             host = info['production']['host']
             database = info['production']['database']
 
-        self.engine = create_engine('postgresql://{}:{}@{}:5432/{}'.
-                                    format(username,
-                                           password,
-                                           host,
-                                           database))
+        self.engine = sqlalchemy.create_engine('postgresql://{}:{}@{}:5432/{}'.
+                                               format(username,
+                                                      password,
+                                                      host,
+                                                      database))
         self.mapping_L = {'A1': 'A1', 'B1': 'B1', 'C1': 'C1', 'D1': 'D1',
                           'E1': 'E1', 'F1': 'F1', 'G1': 'G1', 'H1': 'H1',
                           'I1': 'A2', 'J1': 'B2', 'K1': 'C2', 'L1': 'D2',
@@ -670,6 +673,30 @@ class HDF5:
                 df['uncle_experiment_id'] = self.get_exp()
 
         return df
+
+    def write_processing_status(self, status, error = None):
+        """
+        Parameters
+        ----------
+        status : str
+            Status of .uni processing
+            Current statuses: "failed", "processing", "complete", "processing"
+        error : str
+            Traceback from any errors which happen during parsing/writing
+
+        Returns
+        -------
+        None
+        """
+        error = sqlalchemy.null() if not error else "'{}'".format(error)
+
+        with self.engine.connect() as con:
+            con.execute("UPDATE uncle_experiment_sets "
+                        "SET processing_status = '{}', "
+                        "    processing_errors = {} "
+                        "WHERE id = {};".format(status,
+                                                error,
+                                                self.exp_set_id()))
 
     # ----------------------------------------------------------------------- #
     # UTILITY FUNCTIONS                                                       #
