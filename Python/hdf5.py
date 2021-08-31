@@ -84,6 +84,9 @@ class HDF5:
     get_exp_product()
         Returns product ID, if it exists
 
+    exp_product_assigned()
+        Returns product ID, if it has been assigned to experiment
+
     exp_product_exists()
         Returns T/F if product exists
 
@@ -461,6 +464,25 @@ class HDF5:
         else:
             return False
 
+    def get_exp_product(self):
+        """
+        Returns
+        -------
+        int
+            Product ID, if it exists
+        """
+        with self.engine.connect() as con:
+            prod_id = con.execute("SELECT id "
+                                  "FROM products "
+                                  "WHERE name = '{}';".
+                                  format(self.exp_product()))
+            prod_id = prod_id.mappings().all()
+
+        if prod_id:
+            return prod_id[0]['id']
+        else:
+            return False
+
     def exp_product_assigned(self):
         """
         Returns
@@ -478,25 +500,6 @@ class HDF5:
 
         if prod_id:
             return prod_id[0]['product_id']
-        else:
-            return False
-
-    def get_exp_product(self):
-        """
-        Returns
-        -------
-        int
-            Product ID, if it exists
-        """
-        with self.engine.connect() as con:
-            prod_id = con.execute("SELECT id "
-                                  "FROM products "
-                                  "WHERE name = '{}';".
-                                  format(self.exp_product()))
-            prod_id = prod_id.mappings().all()
-
-        if prod_id:
-            return prod_id[0]['id']
         else:
             return False
 
