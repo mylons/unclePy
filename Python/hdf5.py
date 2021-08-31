@@ -78,11 +78,17 @@ class HDF5:
     get_exp_instrument()
         Returns instrument ID, if it exists
 
+    exp_instrument_assigned()
+        Returns instrument ID, if it has been assigned to experiment
+
     exp_instrument_exists()
         Returns T/F if experiment exists
 
     get_exp_product()
         Returns product ID, if it exists
+
+    exp_product_assigned()
+        Returns product ID, if it has been assigned to experiment
 
     exp_product_exists()
         Returns T/F if product exists
@@ -452,6 +458,26 @@ class HDF5:
         else:
             return 0
 
+    def exp_instrument_assigned(self):
+        """
+        Returns
+        -------
+        bool
+            True: if instrument has been assigned to UncleExperimentSet
+            False: if instrument has not been assigned to UncleExperimentSet
+        """
+        with self.engine.connect() as con:
+            inst_id = con.execute("SELECT uncle_instrument_id "
+                                  "FROM uncle_experiments "
+                                  "WHERE id = '{}';".
+                                  format(self.uncle_experiment_id))
+            inst_id = inst_id.mappings().all()
+
+        if inst_id:
+            return inst_id[0]['uncle_instrument_id']
+        else:
+            return False
+
     def exp_instrument_exists(self):
         """
         Returns
@@ -462,27 +488,6 @@ class HDF5:
         """
         if self.get_exp_instrument():
             return True
-        else:
-            return False
-
-    def exp_product_assigned(self):
-        """
-        Returns
-        -------
-        bool
-            True: if product has been assigned to UncleExperimentSet
-            False: if product has not been assigned to UncleExperimentSet
-        """
-        with self.engine.connect() as con:
-            query = sqlalchemy.text("SELECT product_id "
-                                    "FROM uncle_experiment_sets "
-                                    "WHERE id = '{}';".
-                                    format(self.exp_set_id()))
-            prod_id = con.execute(query)
-            prod_id = prod_id.mappings().all()
-
-        if prod_id:
-            return prod_id[0]['product_id']
         else:
             return False
 
@@ -506,12 +511,32 @@ class HDF5:
         else:
             return False
 
+    def exp_product_assigned(self):
+        """
+        Returns
+        -------
+        bool
+            True: if product has been assigned to UncleExperimentSet
+            False: if product has not been assigned to UncleExperimentSet
+        """
+        with self.engine.connect() as con:
+            prod_id = con.execute("SELECT product_id "
+                                  "FROM uncle_experiment_sets "
+                                  "WHERE id = '{}';".
+                                  format(self.exp_set_id()))
+            prod_id = prod_id.mappings().all()
+
+        if prod_id:
+            return prod_id[0]['product_id']
+        else:
+            return False
+
     def exp_product_exists(self):
         """
         Returns
         -------
-        int or False
-            int: product ID, if it exists
+        bool
+            True: if product exists
             False: if product does not exist
         """
         if self.get_exp_product():
@@ -588,7 +613,10 @@ class HDF5:
         if self.exp_exists():
             return
 
-        if self.exp_instrument_exists():
+        inst_id = self.exp_instrument_assigned()
+        if inst_id:
+            pass
+        elif self.exp_instrument_exists():
             inst_id = self.get_exp_instrument()
         # Write instrument info if it does not exist
         else:
@@ -636,15 +664,7 @@ class HDF5:
         -------
         None
         """
-        with self.engine.connect() as con:
-            query = sqlalchemy.text("SELECT id "
-                                    "FROM uncle_instruments "
-                                    "WHERE id = '{}';".
-                                    format(self.exp_inst_num()))
-            inst_id = con.execute(query)
-            inst_id = inst_id.mappings().all()
-
-        if inst_id:
+        if self.exp_instrument_exists() or self.exp_instrument_assigned():
             return
 
         inst_info = {'id': [int(self.exp_inst_num())],
