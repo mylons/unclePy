@@ -688,7 +688,7 @@ class HDF5:
         status : str
             Status of .uni processing
             Current statuses: "failed", "processing", "complete", "processing"
-        error : sqlalchemy.exc.SQLAlchemyError
+        error : sqlalchemy.exc.SQLAlchemyError, Exception
             Traceback from any errors which happen during parsing/writing
 
         Returns

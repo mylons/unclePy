@@ -45,5 +45,5 @@ if __name__ == '__main__':
         sls.write_sls_473_sql()
         sls.write_bcm_sql()
         hdf.write_processing_status(status = 'complete')
-    except sqlalchemy.exc.SQLAlchemyError as err:
+    except (Exception, sqlalchemy.exc.SQLAlchemyError) as err:
         hdf.write_processing_status(status = 'failed', error = err)
