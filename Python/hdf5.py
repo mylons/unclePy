@@ -189,10 +189,11 @@ class HDF5:
             Database ID for associated experiment set
         """
         with self.engine.connect() as con:
-            exp_set_id = con.execute("SELECT uncle_experiment_set_id "
-                                     "FROM uncle_experiments "
-                                     "WHERE id = {};".
-                                     format(self.uncle_experiment_id))
+            query = sqlalchemy.text("SELECT uncle_experiment_set_id "
+                                    "FROM uncle_experiments "
+                                    "WHERE id = {};".
+                                    format(self.uncle_experiment_id))
+            exp_set_id = con.execute(query)
             exp_set_id = exp_set_id.mappings().all()
         return exp_set_id[0]['uncle_experiment_set_id']
 
@@ -390,16 +391,17 @@ class HDF5:
             Experiment ID, if it exists
         """
         with self.engine.connect() as con:
-            exp_id = con.execute("SELECT id "
-                                 "FROM uncle_experiments "
-                                 "WHERE uncle_experiment_set_id = '{}' "
-                                 "AND uncle_instrument_id = '{}' "
-                                 "AND plate_side = '{}' "
-                                 "AND date = '{}';".format(
-                                     self.exp_set_id(),
-                                     self.get_exp_instrument(),
-                                     self.exp_plate_side(),
-                                     self.exp_date()))
+            query = sqlalchemy.text("SELECT id "
+                                    "FROM uncle_experiments "
+                                    "WHERE uncle_experiment_set_id = '{}' "
+                                    "AND uncle_instrument_id = '{}' "
+                                    "AND plate_side = '{}' "
+                                    "AND date = '{}';".format(
+                                        self.exp_set_id(),
+                                        self.get_exp_instrument(),
+                                        self.exp_plate_side(),
+                                        self.exp_date()))
+            exp_id = con.execute(query)
             exp_id = exp_id.mappings().all()
         if exp_id:
             return exp_id[0]['id']
@@ -426,10 +428,11 @@ class HDF5:
         None
         """
         with self.engine.connect() as con:
-            exp = con.execute("SELECT id "
-                              "FROM uncle_experiments "
-                              "WHERE id = '{}';".
-                              format(self.uncle_experiment_id))
+            query = sqlalchemy.text("SELECT id "
+                                    "FROM uncle_experiments "
+                                    "WHERE id = '{}';".
+                                    format(self.uncle_experiment_id))
+            exp = con.execute(query)
             exp = exp.mappings().all()
         assert exp, 'Could not find UNcle experiment. ' \
                     'Confirm experiment has been created.'
@@ -443,10 +446,11 @@ class HDF5:
             0: if experiment instrument does not exist
         """
         with self.engine.connect() as con:
-            inst_id = con.execute("SELECT id "
-                                  "FROM uncle_instruments "
-                                  "WHERE id = '{}';".
-                                  format(self.exp_inst_num()))
+            query = sqlalchemy.text("SELECT id "
+                                    "FROM uncle_instruments "
+                                    "WHERE id = '{}';".
+                                    format(self.exp_inst_num()))
+            inst_id = con.execute(query)
             inst_id = inst_id.mappings().all()
 
         if inst_id:
@@ -495,10 +499,11 @@ class HDF5:
             Product ID, if it exists
         """
         with self.engine.connect() as con:
-            prod_id = con.execute("SELECT id "
-                                  "FROM products "
-                                  "WHERE name = '{}';".
-                                  format(self.exp_product()))
+            query = sqlalchemy.text("SELECT id "
+                                    "FROM products "
+                                    "WHERE name = '{}';".
+                                    format(self.exp_product()))
+            prod_id = con.execute(query)
             prod_id = prod_id.mappings().all()
 
         if prod_id:
@@ -574,21 +579,24 @@ class HDF5:
         update_params = df.to_dict('records')[0]
 
         with self.engine.connect() as con:
-            con.execute("UPDATE uncle_experiment_sets SET "
-                        "name = '{}', "
-                        "product_id = '{}', "
-                        "exp_type = '{}', "
-                        "plate_generation = '{}', "
-                        "created_at = '{}', "
-                        "updated_at = '{}' "
-                        "WHERE id = {};".format(
-                            update_params['name'],
-                            update_params['product_id'],
-                            update_params['exp_type'],
-                            update_params['plate_generation'],
-                            update_params['created_at'],
-                            update_params['updated_at'],
-                            self.exp_set_id()))
+            query = sqlalchemy.text(
+                "UPDATE uncle_experiment_sets SET "
+                "name = '{}', "
+                "product_id = '{}', "
+                "exp_type = '{}', "
+                "plate_generation = '{}', "
+                "created_at = '{}', "
+                "updated_at = '{}' "
+                "WHERE id = {};".format(
+                    update_params['name'],
+                    update_params['product_id'],
+                    update_params['exp_type'],
+                    update_params['plate_generation'],
+                    update_params['created_at'],
+                    update_params['updated_at'],
+                    self.exp_set_id())
+            )
+            con.execute(query)
 
     def write_exp_info_sql(self, datetime_needed = True):
         """
@@ -625,22 +633,24 @@ class HDF5:
         update_params = df.to_dict('records')[0]
 
         with self.engine.connect() as con:
-            con.execute("UPDATE uncle_experiments SET "
-                        "uncle_experiment_set_id = {},"
-                        "uncle_instrument_id = '{}',"
-                        "plate_side = '{}',"
-                        "date = '{}',"
-                        "created_at = '{}',"
-                        "updated_at = '{}'"
-                        "WHERE id = {};".format(
-                            update_params['uncle_experiment_set_id'],
-                            update_params['uncle_instrument_id'],
-                            update_params['plate_side'],
-                            update_params['date'],
-                            update_params['created_at'],
-                            update_params['updated_at'],
-                            self.uncle_experiment_id
-                        ))
+            query = sqlalchemy.text(
+                "UPDATE uncle_experiments SET "
+                "uncle_experiment_set_id = {},"
+                "uncle_instrument_id = '{}',"
+                "plate_side = '{}',"
+                "date = '{}',"
+                "created_at = '{}',"
+                "updated_at = '{}'"
+                "WHERE id = {};".format(
+                    update_params['uncle_experiment_set_id'],
+                    update_params['uncle_instrument_id'],
+                    update_params['plate_side'],
+                    update_params['date'],
+                    update_params['created_at'],
+                    update_params['updated_at'],
+                    self.uncle_experiment_id)
+            )
+            con.execute(query)
 
     def write_instrument_info_sql(self, datetime_needed = True):
         """
@@ -741,22 +751,26 @@ class HDF5:
         None
         """
         with self.engine.connect() as con:
-            con.execute("UPDATE uncle_experiment_sets "
-                        "SET processing_status = '{}' "
-                        "WHERE id = {};".format(status,
-                                                self.exp_set_id()))
+            query = sqlalchemy.text("UPDATE uncle_experiment_sets "
+                                    "SET processing_status = '{}' "
+                                    "WHERE id = {};".format(
+                                        status,
+                                        self.exp_set_id()))
+            con.execute(query)
 
             if error:
-                t = sqlalchemy.text("UPDATE uncle_experiments "
-                                    "SET processing_errors = $${}$$ "
-                                    "WHERE id = {};".format(
-                                        str(error),
-                                        self.uncle_experiment_id))
-                con.execute(t)
+                query = sqlalchemy.text("UPDATE uncle_experiments "
+                                        "SET processing_errors = $${}$$ "
+                                        "WHERE id = {};".format(
+                                            str(error),
+                                            self.uncle_experiment_id))
+                con.execute(query)
             else:
-                con.execute("UPDATE uncle_experiments "
-                            "SET processing_errors = null "
-                            "WHERE id = {};".format(self.uncle_experiment_id))
+                query = sqlalchemy.text("UPDATE uncle_experiments "
+                                        "SET processing_errors = null "
+                                        "WHERE id = {};".format(
+                                            self.uncle_experiment_id))
+                con.execute(query)
 
     # ----------------------------------------------------------------------- #
     # UTILITY FUNCTIONS                                                       #
@@ -790,10 +804,11 @@ class HDF5:
             Database well_id
         """
         with self.engine.connect() as con:
-            well_id = con.execute("SELECT well_id FROM well_set_wells "
-                                  "WHERE well_set_id = {} "
-                                  "AND plate_address = '{}';".
-                                  format(self.well_set_id, well))
+            query = sqlalchemy.text("SELECT well_id FROM well_set_wells "
+                                    "WHERE well_set_id = {} "
+                                    "AND plate_address = '{}';".
+                                    format(self.well_set_id, well))
+            well_id = con.execute(query)
             well_id = well_id.mappings().all()
         return well_id[0]['well_id']
 
@@ -812,9 +827,10 @@ class HDF5:
         if well[0].isalpha():
             well = self.well_name_to_id(well)
         with self.engine.connect() as con:
-            summary_id = con.execute("SELECT id "
-                                     "FROM uncle_summaries "
-                                     "WHERE well_id = {};".format(well))
+            query = sqlalchemy.text("SELECT id "
+                                    "FROM uncle_summaries "
+                                    "WHERE well_id = {};".format(well))
+            summary_id = con.execute(query)
             summary_id = summary_id.mappings().all()
         return summary_id[0]['id']
 
