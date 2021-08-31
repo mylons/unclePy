@@ -127,25 +127,25 @@ class HDF5:
         #################
         # for ebase-dev #
         #################
-        # with open("/var/www/ebase-dev/current/config/database.yml", 'r') \
-        #         as stream:
-        #     info = yaml.safe_load(stream)
-        #     username = info['production']['username']
-        #     password = info['production']['password']
-        #     host = info['production']['host']
-        #     database = info['production']['database']
-        #
-        # self.engine = sqlalchemy.create_engine('postgresql://{}:{}@{}:5432/{}'.
-        #                                        format(username,
-        #                                               password,
-        #                                               host,
-        #                                               database))
+        with open("/var/www/ebase-dev/current/config/database.yml", 'r') \
+                as stream:
+            info = yaml.safe_load(stream)
+            username = info['production']['username']
+            password = info['production']['password']
+            host = info['production']['host']
+            database = info['production']['database']
 
         self.engine = sqlalchemy.create_engine('postgresql://{}:{}@{}:5432/{}'.
-                                               format('postgres',
-                                                      '',
-                                                      'localhost',
-                                                      'ebase_dev'))
+                                               format(username,
+                                                      password,
+                                                      host,
+                                                      database))
+
+        # self.engine = sqlalchemy.create_engine('postgresql://{}:{}@{}:5432/{}'.
+        #                                        format('postgres',
+        #                                               '',
+        #                                               'localhost',
+        #                                               'ebase_dev'))
 
         self.mapping_L = {'A1': 'A1', 'B1': 'B1', 'C1': 'C1', 'D1': 'D1',
                           'E1': 'E1', 'F1': 'F1', 'G1': 'G1', 'H1': 'H1',
