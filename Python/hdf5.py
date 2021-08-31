@@ -127,19 +127,26 @@ class HDF5:
         #################
         # for ebase-dev #
         #################
-        with open("/var/www/ebase-dev/current/config/database.yml", 'r') \
-                as stream:
-            info = yaml.safe_load(stream)
-            username = info['production']['username']
-            password = info['production']['password']
-            host = info['production']['host']
-            database = info['production']['database']
+        # with open("/var/www/ebase-dev/current/config/database.yml", 'r') \
+        #         as stream:
+        #     info = yaml.safe_load(stream)
+        #     username = info['production']['username']
+        #     password = info['production']['password']
+        #     host = info['production']['host']
+        #     database = info['production']['database']
+        #
+        # self.engine = sqlalchemy.create_engine('postgresql://{}:{}@{}:5432/{}'.
+        #                                        format(username,
+        #                                               password,
+        #                                               host,
+        #                                               database))
 
         self.engine = sqlalchemy.create_engine('postgresql://{}:{}@{}:5432/{}'.
-                                               format(username,
-                                                      password,
-                                                      host,
-                                                      database))
+                                               format('postgres',
+                                                      '',
+                                                      'localhost',
+                                                      'ebase_dev'))
+
         self.mapping_L = {'A1': 'A1', 'B1': 'B1', 'C1': 'C1', 'D1': 'D1',
                           'E1': 'E1', 'F1': 'F1', 'G1': 'G1', 'H1': 'H1',
                           'I1': 'A2', 'J1': 'B2', 'K1': 'C2', 'L1': 'D2',
@@ -681,22 +688,30 @@ class HDF5:
         status : str
             Status of .uni processing
             Current statuses: "failed", "processing", "complete", "processing"
-        error : str
+        error : sqlalchemy.exc.SQLAlchemyError
             Traceback from any errors which happen during parsing/writing
 
         Returns
         -------
         None
         """
-        error = sqlalchemy.null() if not error else "'{}'".format(error)
-
         with self.engine.connect() as con:
             con.execute("UPDATE uncle_experiment_sets "
-                        "SET processing_status = '{}', "
-                        "    processing_errors = {} "
+                        "SET processing_status = '{}' "
                         "WHERE id = {};".format(status,
-                                                error,
                                                 self.exp_set_id()))
+
+            if error:
+                t = sqlalchemy.text("UPDATE uncle_experiments "
+                                    "SET processing_errors = $${}$$ "
+                                    "WHERE id = {};".format(
+                                        str(error),
+                                        self.uncle_experiment_id))
+                con.execute(t)
+            else:
+                con.execute("UPDATE uncle_experiments "
+                            "SET processing_errors = null "
+                            "WHERE id = {};".format(self.uncle_experiment_id))
 
     # ----------------------------------------------------------------------- #
     # UTILITY FUNCTIONS                                                       #
