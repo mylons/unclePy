@@ -507,8 +507,8 @@ class HDF5:
         """
         Returns
         -------
-        int or False
-            int: product ID, if it exists
+        bool
+            True: if product exists
             False: if product does not exist
         """
         if self.get_exp_product():
