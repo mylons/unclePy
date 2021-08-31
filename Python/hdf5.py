@@ -461,6 +461,26 @@ class HDF5:
         else:
             return False
 
+    def exp_product_assigned(self):
+        """
+        Returns
+        -------
+        bool
+            True: if product has been assigned to UncleExperimentSet
+            False: if product has not been assigned to UncleExperimentSet
+        """
+        with self.engine.connect() as con:
+            prod_id = con.execute("SELECT product_id "
+                                  "FROM uncle_experiment_sets "
+                                  "WHERE id = '{}';".
+                                  format(self.exp_set_id()))
+            prod_id = prod_id.mappings().all()
+
+        if prod_id:
+            return prod_id[0]['product_id']
+        else:
+            return False
+
     def get_exp_product(self):
         """
         Returns
@@ -508,7 +528,10 @@ class HDF5:
         -------
         None
         """
-        if self.exp_product_exists():
+        product_id = self.exp_product_assigned()
+        if product_id:
+            pass
+        elif self.exp_product_exists():
             product_id = self.get_exp_product()
         # Write product info if it does not exist
         else:
@@ -629,7 +652,7 @@ class HDF5:
         -------
         None
         """
-        if self.exp_product_exists():
+        if self.exp_product_exists() or self.exp_product_assigned():
             return
 
         prod_info = {'name': [self.exp_product()],
