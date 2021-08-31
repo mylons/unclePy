@@ -2,6 +2,7 @@ from hdf5 import HDF5
 from sls import SLS
 from dls import DLS
 import argparse
+import sqlalchemy
 
 parser = argparse.ArgumentParser(description = 'Parse .uni file')
 parser.add_argument('uni_file',
@@ -44,5 +45,5 @@ if __name__ == '__main__':
         sls.write_sls_473_sql()
         sls.write_bcm_sql()
         hdf.write_processing_status(status = 'complete')
-    except Exception as err:
+    except (Exception, sqlalchemy.exc.SQLAlchemyError) as err:
         hdf.write_processing_status(status = 'failed', error = err)
