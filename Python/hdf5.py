@@ -78,6 +78,9 @@ class HDF5:
     get_exp_instrument()
         Returns instrument ID, if it exists
 
+    exp_instrument_assigned()
+        Returns instrument ID, if it has been assigned to experiment
+
     exp_instrument_exists()
         Returns T/F if experiment exists
 
@@ -451,6 +454,26 @@ class HDF5:
         else:
             return 0
 
+    def exp_instrument_assigned(self):
+        """
+        Returns
+        -------
+        bool
+            True: if instrument has been assigned to UncleExperimentSet
+            False: if instrument has not been assigned to UncleExperimentSet
+        """
+        with self.engine.connect() as con:
+            inst_id = con.execute("SELECT uncle_instrument_id "
+                                  "FROM uncle_experiments "
+                                  "WHERE id = '{}';".
+                                  format(self.uncle_experiment_id))
+            inst_id = inst_id.mappings().all()
+
+        if inst_id:
+            return inst_id[0]['uncle_instrument_id']
+        else:
+            return False
+
     def exp_instrument_exists(self):
         """
         Returns
@@ -582,7 +605,10 @@ class HDF5:
         if self.exp_exists():
             return
 
-        if self.exp_instrument_exists():
+        inst_id = self.exp_instrument_assigned()
+        if inst_id:
+            pass
+        elif self.exp_instrument_exists():
             inst_id = self.get_exp_instrument()
         # Write instrument info if it does not exist
         else:
@@ -628,14 +654,7 @@ class HDF5:
         -------
         None
         """
-        with self.engine.connect() as con:
-            inst_id = con.execute("SELECT id "
-                                  "FROM uncle_instruments "
-                                  "WHERE id = '{}';".
-                                  format(self.exp_inst_num()))
-            inst_id = inst_id.mappings().all()
-
-        if inst_id:
+        if self.exp_instrument_exists() or self.exp_instrument_assigned():
             return
 
         inst_info = {'id': [int(self.exp_inst_num())],
