@@ -1,9 +1,21 @@
 from setuptools import setup
 
+requires = [
+    'pandas',
+    'numpy',
+    'matplotlib',
+    'scipy',
+    'scikit-learn',
+    'yaml',
+    'pyyaml',
+    'setuptools'
+]
+
 setup(
     name = 'unclePy',
     version = '1.0',
     packages = ['unclePy'],
+    install_requires = requires,
     url = 'https://github.com/eric-hunt/unclePy',
     license = 'GNU Affero General Public License v3.0',
     author = 'Jacob Miller',
