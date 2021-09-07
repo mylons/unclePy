@@ -30,9 +30,6 @@ class HDF5:
 
     Methods
     -------
-    exp_set_id()
-        Returns database ID for associated experiment set
-
     exp_file_name()
         Returns name of file associated with experiment
 
@@ -152,6 +149,14 @@ class HDF5:
         #                                               '',
         #                                               'localhost',
         #                                               'ebase_dev'))
+        with self.engine.connect() as con:
+            query = sqlalchemy.text("SELECT uncle_experiment_set_id "
+                                    "FROM uncle_experiments "
+                                    "WHERE id = {};".
+                                    format(self.uncle_experiment_id))
+            exp_set_id = con.execute(query)
+            exp_set_id = exp_set_id.mappings().all()
+        self.exp_set_id = exp_set_id[0]['uncle_experiment_set_id']
 
         self.mapping_L = {'A1': 'A1', 'B1': 'B1', 'C1': 'C1', 'D1': 'D1',
                           'E1': 'E1', 'F1': 'F1', 'G1': 'G1', 'H1': 'H1',
@@ -181,22 +186,6 @@ class HDF5:
     # ----------------------------------------------------------------------- #
     # EXPERIMENT METADATA                                                     #
     # ----------------------------------------------------------------------- #
-    def exp_set_id(self):
-        """
-        Returns
-        -------
-        int
-            Database ID for associated experiment set
-        """
-        with self.engine.connect() as con:
-            query = sqlalchemy.text("SELECT uncle_experiment_set_id "
-                                    "FROM uncle_experiments "
-                                    "WHERE id = {};".
-                                    format(self.uncle_experiment_id))
-            exp_set_id = con.execute(query)
-            exp_set_id = exp_set_id.mappings().all()
-        return exp_set_id[0]['uncle_experiment_set_id']
-
     def exp_file_name(self):
         """
         Returns
@@ -397,7 +386,7 @@ class HDF5:
                                     "AND uncle_instrument_id = '{}' "
                                     "AND plate_side = '{}' "
                                     "AND date = '{}';".format(
-                                        self.exp_set_id(),
+                                        self.exp_set_id,
                                         self.get_exp_instrument(),
                                         self.exp_plate_side(),
                                         self.exp_date()))
@@ -523,7 +512,7 @@ class HDF5:
             prod_id = con.execute("SELECT product_id "
                                   "FROM uncle_experiment_sets "
                                   "WHERE id = '{}';".
-                                  format(self.exp_set_id()))
+                                  format(self.exp_set_id))
             prod_id = prod_id.mappings().all()
 
         if prod_id:
@@ -594,7 +583,7 @@ class HDF5:
                     update_params['plate_generation'],
                     update_params['created_at'],
                     update_params['updated_at'],
-                    self.exp_set_id())
+                    self.exp_set_id)
             )
             con.execute(query)
 
@@ -623,7 +612,7 @@ class HDF5:
             self.write_instrument_info_sql()
             inst_id = self.get_exp_instrument()
 
-        exp_info = {'uncle_experiment_set_id': self.exp_set_id(),
+        exp_info = {'uncle_experiment_set_id': self.exp_set_id,
                     'uncle_instrument_id': inst_id,
                     'plate_side': [self.exp_plate_side()],
                     'date': [self.exp_date()]}
@@ -755,7 +744,7 @@ class HDF5:
                                     "SET processing_status = '{}' "
                                     "WHERE id = {};".format(
                                         status,
-                                        self.exp_set_id()))
+                                        self.exp_set_id))
             con.execute(query)
 
             if error:
