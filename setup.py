@@ -6,9 +6,9 @@ requires = [
     'matplotlib',
     'scipy',
     'scikit-learn',
-    'yaml',
     'pyyaml',
-    'setuptools'
+    'h5py',
+    'sqlalchemy'
 ]
 
 setup(
