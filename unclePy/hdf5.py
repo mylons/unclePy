@@ -233,8 +233,6 @@ class HDF5:
         """
         plate_info = self.exp_file_name().split('-')[-1]
         plate_type = re.search(r'\D+', plate_info).group()
-        assert plate_type.lower() in ['ph', 'cond', 'gen'],\
-            'Incorrect plate type. Plate type should be one of: pH, cond, gen'
         return plate_type
 
     def exp_generation(self):
