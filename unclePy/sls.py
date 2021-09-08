@@ -344,9 +344,8 @@ class SLS(HDF5):
                             't_agg_266': self.sls_summary_tagg266(well),
                             't_agg_473': self.sls_summary_tagg473(well)}
 
-            sample_index = np.flatnonzero(
-                np.char.find(self.samples(), well) != -1)
-            well_summary['sample'] = samples[sample_index][0]
+            sample_mask = pd.Series(samples).str.endswith(well)
+            well_summary['sample'] = samples[sample_mask][0]
 
             tms = self.sls_summary_tms(well)
             for i in range(max_tm):

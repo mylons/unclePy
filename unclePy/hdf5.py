@@ -30,9 +30,6 @@ class HDF5:
 
     Methods
     -------
-    exp_set_id()
-        Returns database ID for associated experiment set
-
     exp_file_name()
         Returns name of file associated with experiment
 
@@ -57,7 +54,7 @@ class HDF5:
     exp_plate_side()
         Returns side of plate used in experiment (L/R)
 
-    wells()
+    wells(include_uni_address)
         Returns names of wells used in experiment
 
     samples()
@@ -152,42 +149,6 @@ class HDF5:
         #                                               '',
         #                                               'localhost',
         #                                               'ebase_dev'))
-
-        self.mapping_L = {'A1': 'A1', 'B1': 'B1', 'C1': 'C1', 'D1': 'D1',
-                          'E1': 'E1', 'F1': 'F1', 'G1': 'G1', 'H1': 'H1',
-                          'I1': 'A2', 'J1': 'B2', 'K1': 'C2', 'L1': 'D2',
-                          'M1': 'E2', 'N1': 'F2', 'O1': 'G2', 'P1': 'H2',
-                          'A2': 'A3', 'B2': 'B3', 'C2': 'C3', 'D2': 'D3',
-                          'E2': 'E3', 'F2': 'F3', 'G2': 'G3', 'H2': 'H3',
-                          'I2': 'A4', 'J2': 'B4', 'K2': 'C4', 'L2': 'D4',
-                          'M2': 'E4', 'N2': 'F4', 'O2': 'G4', 'P2': 'H4',
-                          'A3': 'A5', 'B3': 'B5', 'C3': 'C5', 'D3': 'D5',
-                          'E3': 'E5', 'F3': 'F5', 'G3': 'G5', 'H3': 'H5',
-                          'I3': 'A6', 'J3': 'B6', 'K3': 'C6', 'L3': 'D6',
-                          'M3': 'E6', 'N3': 'F6', 'O3': 'G6', 'P3': 'H6'}
-        self.mapping_R = {'A1': 'A7', 'B1': 'B7', 'C1': 'C7', 'D1': 'D7',
-                          'E1': 'E7', 'F1': 'F7', 'G1': 'G7', 'H1': 'H7',
-                          'I1': 'A8', 'J1': 'B8', 'K1': 'C8', 'L1': 'D8',
-                          'M1': 'E8', 'N1': 'F8', 'O1': 'G8', 'P1': 'H8',
-                          'A2': 'A9', 'B2': 'B9', 'C2': 'C9', 'D2': 'D9',
-                          'E2': 'E9', 'F2': 'F9', 'G2': 'G9', 'H2': 'H9',
-                          'I2': 'A10', 'J2': 'B10', 'K2': 'C10', 'L2': 'D10',
-                          'M2': 'E10', 'N2': 'F10', 'O2': 'G10', 'P2': 'H10',
-                          'A3': 'A11', 'B3': 'B11', 'C3': 'C11', 'D3': 'D11',
-                          'E3': 'E11', 'F3': 'F11', 'G3': 'G11', 'H3': 'H11',
-                          'I3': 'A12', 'J3': 'B12', 'K3': 'C12', 'L3': 'D12',
-                          'M3': 'E12', 'N3': 'F12', 'O3': 'G12', 'P3': 'H12'}
-
-    # ----------------------------------------------------------------------- #
-    # EXPERIMENT METADATA                                                     #
-    # ----------------------------------------------------------------------- #
-    def exp_set_id(self):
-        """
-        Returns
-        -------
-        int
-            Database ID for associated experiment set
-        """
         with self.engine.connect() as con:
             query = sqlalchemy.text("SELECT uncle_experiment_set_id "
                                     "FROM uncle_experiments "
@@ -195,8 +156,11 @@ class HDF5:
                                     format(self.uncle_experiment_id))
             exp_set_id = con.execute(query)
             exp_set_id = exp_set_id.mappings().all()
-        return exp_set_id[0]['uncle_experiment_set_id']
+        self.exp_set_id = exp_set_id[0]['uncle_experiment_set_id']
 
+    # ----------------------------------------------------------------------- #
+    # EXPERIMENT METADATA                                                     #
+    # ----------------------------------------------------------------------- #
     def exp_file_name(self):
         """
         Returns
@@ -302,33 +266,63 @@ class HDF5:
     # ----------------------------------------------------------------------- #
     # EXPERIMENT INFORMATION                                                  #
     # ----------------------------------------------------------------------- #
-    def wells(self):
+    def wells(self, include_uni_address = False):
         """
-         {uni well name: actual well name}
-
         Returns
         -------
-        np.array
-            Well names
+        dict, if include_uni_address == True
+            {uni capillary address: layout address}
+        np.array, if include_uni_address == False
+            Layout addresses
 
         Examples
         --------
-        np.array(['A1', 'B1', ...])
+        include_uni_address == True
+            {'A1': 'A1', 'B1': 'A2', 'C1': 'A3', 'D1': 'A4', ...}
+        include_uni_address == False
+            np.array(['A1', 'B1', ...])
         """
-        if self.exp_plate_side() == 'L':
-            mapping = self.mapping_L
-        elif self.exp_plate_side() == 'R':
-            mapping = self.mapping_R
+        if include_uni_address:
+            to_select = 'layout_address, uni_capillary_address'
         else:
-            raise AttributeError('Cannot determine plate side for well '
-                                 'mapping.')
+            to_select = 'layout_address'
 
-        wells = []
-        for i in self.file['Application1']['Run1']['SampleData']:
-            well = i[0].decode('utf-8')
-            mapped_well = mapping[well]
-            if self.well_exists(mapped_well):
-                wells = np.append(wells, mapped_well)
+        with self.engine.connect() as con:
+            query = sqlalchemy.text(
+                "SELECT {} "
+                "FROM wells w "
+                "JOIN well_set_wells wsw "
+                "   ON wsw.well_id = w.id "
+                "JOIN well_sets ws "
+                "   ON ws.id = wsw.well_set_id "
+                "WHERE ws.id = {} "
+                "ORDER BY w.id".format(
+                    to_select,
+                    self.well_set_id
+                ))
+            result = con.execute(query)
+            result = result.mappings().all()
+
+        # SQL query will return -all- wells associated with UNcleExperimentSet.
+        # Loop below will filter out wells based on plate side by looking at
+        # plate column value because plates may be loaded in different orders
+        plate_side_wells = []
+        for well in result:
+            if self.exp_plate_side() == 'L' and \
+                    int(well['layout_address'][1:]) <= 6:
+                plate_side_wells.append(well)
+            elif self.exp_plate_side() == 'R' and \
+                    int(well['layout_address'][1:]) > 6:
+                plate_side_wells.append(well)
+
+        if include_uni_address:
+            wells = {}
+            for well in plate_side_wells:
+                wells[well['uni_capillary_address']] = well['layout_address']
+        else:
+            wells = []
+            for well in plate_side_wells:
+                wells = np.append(wells, well['layout_address'])
         return wells
 
     def samples(self):
@@ -342,18 +336,16 @@ class HDF5:
         --------
         np.array(['0.1 mg/ml Uni A1', '0.1 mg/ml Uni B1', ...])
         """
-        if self.exp_plate_side() == 'L':
-            mapping = self.mapping_L
-        elif self.exp_plate_side() == 'R':
-            mapping = self.mapping_R
-        else:
-            raise AttributeError('Cannot determine plate side for well '
-                                 'mapping.')
+        mapping = self.wells(include_uni_address = True)
         samples = []
 
         for i in self.file['Application1']['Run1']['SampleData']:
             sample_name = i[1].decode('utf-8').split(' ')
             well = sample_name[-1]
+            if not mapping.get(well, False):
+                # If well does not actually exist in template
+                continue
+
             mapped_well = mapping[well]
             if self.well_exists(mapped_well):
                 corrected_sample_name = [mapped_well if i == well
@@ -397,7 +389,7 @@ class HDF5:
                                     "AND uncle_instrument_id = '{}' "
                                     "AND plate_side = '{}' "
                                     "AND date = '{}';".format(
-                                        self.exp_set_id(),
+                                        self.exp_set_id,
                                         self.get_exp_instrument(),
                                         self.exp_plate_side(),
                                         self.exp_date()))
@@ -523,7 +515,7 @@ class HDF5:
             prod_id = con.execute("SELECT product_id "
                                   "FROM uncle_experiment_sets "
                                   "WHERE id = '{}';".
-                                  format(self.exp_set_id()))
+                                  format(self.exp_set_id))
             prod_id = prod_id.mappings().all()
 
         if prod_id:
@@ -594,7 +586,7 @@ class HDF5:
                     update_params['plate_generation'],
                     update_params['created_at'],
                     update_params['updated_at'],
-                    self.exp_set_id())
+                    self.exp_set_id)
             )
             con.execute(query)
 
@@ -623,7 +615,7 @@ class HDF5:
             self.write_instrument_info_sql()
             inst_id = self.get_exp_instrument()
 
-        exp_info = {'uncle_experiment_set_id': self.exp_set_id(),
+        exp_info = {'uncle_experiment_set_id': self.exp_set_id,
                     'uncle_instrument_id': inst_id,
                     'plate_side': [self.exp_plate_side()],
                     'date': [self.exp_date()]}
@@ -755,7 +747,7 @@ class HDF5:
                                     "SET processing_status = '{}' "
                                     "WHERE id = {};".format(
                                         status,
-                                        self.exp_set_id()))
+                                        self.exp_set_id))
             con.execute(query)
 
             if error:
