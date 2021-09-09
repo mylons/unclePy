@@ -280,14 +280,9 @@ class HDF5:
         include_uni_address == False
             np.array(['A1', 'B1', ...])
         """
-        if include_uni_address:
-            to_select = 'layout_address, uni_capillary_address'
-        else:
-            to_select = 'layout_address'
-
         with self.engine.connect() as con:
             query = sqlalchemy.text(
-                "SELECT {} "
+                "SELECT layout_address, uni_capillary_address "
                 "FROM wells w "
                 "JOIN well_set_wells wsw "
                 "   ON wsw.well_id = w.id "
@@ -295,7 +290,6 @@ class HDF5:
                 "   ON ws.id = wsw.well_set_id "
                 "WHERE ws.id = {} "
                 "ORDER BY w.id".format(
-                    to_select,
                     self.well_set_id
                 ))
             result = con.execute(query)
@@ -313,13 +307,23 @@ class HDF5:
                     int(well['layout_address'][1:]) > 6:
                 plate_side_wells.append(well)
 
+        # There are cases were not every well in metadata is used in experiment.
+        # This first iterates through all samples actually used in experiment.
+        # Each sample is added as a list so this subsequently flattens the list.
+        # Finally checks if the actual capillaries used align with the metadata
+        capillaries_used = [i[0].decode('utf-8').split(' ') for i in
+                            self.file['Application1']['Run1']['SampleData']]
+        capillaries_used = [cap for caps in capillaries_used for cap in caps]
+        wells_used = [well for well in plate_side_wells
+                      if well['uni_capillary_address'] in capillaries_used]
+
         if include_uni_address:
             wells = {}
-            for well in plate_side_wells:
+            for well in wells_used:
                 wells[well['uni_capillary_address']] = well['layout_address']
         else:
             wells = []
-            for well in plate_side_wells:
+            for well in wells_used:
                 wells = np.append(wells, well['layout_address'])
         return wells
 
