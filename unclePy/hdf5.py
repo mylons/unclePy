@@ -176,7 +176,7 @@ class HDF5:
         run_name = file_name[:-4]
         assert run_name.count('-') == 3, \
             'Incorrect file name format. Format should be: ' \
-            'Date (YYMMDD) – Instrument # – Protein Name – ' \
+            'Date (YYMMDD) - Instrument # - Protein Name - ' \
             'Plate Type/Generation/Side'
         return run_name
 
