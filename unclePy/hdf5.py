@@ -782,7 +782,7 @@ class HDF5:
             Well number, e.g. 'Well_01'
         """
         well_num = np.argwhere(self.wells() == well)[0][0] + 1
-        well_num = f'Well_{well_num:02}'
+        well_num = 'Well_{}'.format(str(well_num).zfill(2))
         return well_num
 
     def well_name_to_id(self, well):
