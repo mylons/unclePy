@@ -130,7 +130,6 @@ class HDF5:
         #################
         # for ebase-dev #
         #################
-        # TODO correct this for ebase production
         with open("../../../config/database.yml", 'r') \
                 as stream:
             info = yaml.safe_load(stream)
