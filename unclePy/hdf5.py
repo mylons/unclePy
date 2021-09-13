@@ -127,10 +127,7 @@ class HDF5:
         self.uncle_experiment_id = uncle_experiment_id
         self.well_set_id = well_set_id
 
-        #################
-        # for ebase-dev #
-        #################
-        with open("../../../config/database.yml", 'r') \
+        with open("/var/www/ebase/current/config/database.yml", 'r') \
                 as stream:
             info = yaml.safe_load(stream)
             username = info['production']['username']
