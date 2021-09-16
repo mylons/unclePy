@@ -8,7 +8,8 @@ requires = [
     'scikit-learn',
     'pyyaml',
     'h5py',
-    'sqlalchemy'
+    'sqlalchemy',
+    'psycopg2'
 ]
 
 setup(
