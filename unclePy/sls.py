@@ -60,8 +60,10 @@ class SLS(HDF5):
         Writes SLS BCM data to PostgreSQL database
     """
 
-    def __init__(self, file_path, uncle_experiment_id, well_set_id):
-        super().__init__(file_path, uncle_experiment_id, well_set_id)
+    def __init__(self, file_path, uncle_experiment_id, well_set_id,
+                 last_capillary_used = None):
+        super().__init__(file_path, uncle_experiment_id, well_set_id,
+                         last_capillary_used)
 
     # ----------------------------------------------------------------------- #
     # GENERIC DATA COLLECTION                                                 #
@@ -338,21 +340,24 @@ class SLS(HDF5):
         df = pd.DataFrame(columns = cols)
 
         for well in wells:
-            well_summary = {'color': self.sls_summary_color(),
-                            'well_id': self.well_name_to_id(well),
-                            't_onset': self.sls_summary_tonset(well),
-                            't_agg_266': self.sls_summary_tagg266(well),
-                            't_agg_473': self.sls_summary_tagg473(well)}
+            try:
+                well_summary = {'color': self.sls_summary_color(),
+                                'well_id': self.well_name_to_id(well),
+                                't_onset': self.sls_summary_tonset(well),
+                                't_agg_266': self.sls_summary_tagg266(well),
+                                't_agg_473': self.sls_summary_tagg473(well)}
 
-            sample_mask = pd.Series(samples).str.endswith(well)
-            well_summary['sample'] = samples[sample_mask][0]
+                sample_mask = pd.Series(samples).str.endswith(well)
+                well_summary['sample'] = samples[sample_mask][0]
 
-            tms = self.sls_summary_tms(well)
-            for i in range(max_tm):
-                well_summary['t_m_{}'.format(i + 1)] = \
-                    tms[i] if tms[i] != 0 else np.nan
+                tms = self.sls_summary_tms(well)
+                for i in range(max_tm):
+                    well_summary['t_m_{}'.format(i + 1)] = \
+                        tms[i] if tms[i] != 0 else np.nan
 
-            df = df.append(well_summary, ignore_index = True)
+                df = df.append(well_summary, ignore_index = True)
+            except IndexError:
+                continue
 
         return df
 
