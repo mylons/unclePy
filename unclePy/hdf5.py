@@ -140,6 +140,7 @@ class HDF5:
             password = info['production']['password']
             host = info['production']['host']
             database = info['production']['database']
+        self.last_capillary_used = last_capillary_used
 
         self.engine = sqlalchemy.create_engine('postgresql://{}:{}@{}:5432/{}'.
                                                format(username,
