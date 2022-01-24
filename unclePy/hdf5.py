@@ -132,6 +132,7 @@ class HDF5:
         self.file = h5py.File(file_path, 'r')
         self.uncle_experiment_id = uncle_experiment_id
         self.well_set_id = well_set_id
+        self.last_capillary_used = last_capillary_used
 
         with open("/var/www/ebase/current/config/database.yml", 'r') \
                 as stream:
@@ -140,7 +141,6 @@ class HDF5:
             password = info['production']['password']
             host = info['production']['host']
             database = info['production']['database']
-        self.last_capillary_used = last_capillary_used
 
         self.engine = sqlalchemy.create_engine('postgresql://{}:{}@{}:5432/{}'.
                                                format(username,
