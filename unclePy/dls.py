@@ -106,10 +106,8 @@ class DLS(HDF5):
         Writes mass data for all wells to PostgreSQL database
     """
 
-    def __init__(self, file_path, uncle_experiment_id, well_set_id,
-                 last_capillary_used = None):
-        super().__init__(file_path, uncle_experiment_id, well_set_id,
-                         last_capillary_used)
+    def __init__(self, file_path, uncle_experiment_id, well_set_id,):
+        super().__init__(file_path, uncle_experiment_id, well_set_id)
         # Hydrodynamic diameter is consistently 2x values found in .uni file
         # Is this possibly because values are radii and export is diameter?
         self.factor = 2

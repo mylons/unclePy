@@ -27,8 +27,6 @@ class HDF5:
         Database ID for UNcle experiment
     well_set_id : int
         Database ID for associated well set
-    last_capillary_used : str
-        Location of last capillary used on L plate
 
     Methods
     -------
@@ -123,16 +121,11 @@ class HDF5:
 
     well_name_to_summary(well)
         Returns database summary ID for input well name
-
-    confirm_capillaries(capillaries_used)
-        Returns index of last capillary used in experiment
     """
-    def __init__(self, file_path, uncle_experiment_id, well_set_id,
-                 last_capillary_used = None):
+    def __init__(self, file_path, uncle_experiment_id, well_set_id,):
         self.file = h5py.File(file_path, 'r')
         self.uncle_experiment_id = uncle_experiment_id
         self.well_set_id = well_set_id
-        self.last_capillary_used = last_capillary_used
 
         with open("/var/www/ebase/current/config/database.yml", 'r') \
                 as stream:
@@ -847,46 +840,6 @@ class HDF5:
             summary_id = con.execute(query)
             summary_id = summary_id.mappings().all()
         return summary_id[0]['id']
-
-    def confirm_capillaries(self, capillaries_used):
-        """
-        Parameters
-        ----------
-        capillaries_used : list of lists
-            List of capillaries used, each as a separate list item
-
-        Returns
-        -------
-        int
-            Index of last capillary used in experiment
-
-        Example
-        -------
-        [['A1'], ['B1'], ['C1], ...]
-        """
-        if self.last_capillary_used == capillaries_used[-1] or \
-                self.last_capillary_used == '' or \
-                self.last_capillary_used is None:
-            return len(capillaries_used)
-
-        last_capillary_index = \
-            capillaries_used.index([self.last_capillary_used.upper()]) + 1
-        return last_capillary_index
-
-    def max_plate_column(self):
-        """
-        Returns
-        -------
-        int
-            Based on plate layout type
-        """
-        cols = {
-            'Bsu': 5
-        }
-        if self.exp_plate_type() in cols:
-            return cols[self.exp_plate_type()]
-        else:
-            return 6
 
 
 def add_datetime(df):
