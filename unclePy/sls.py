@@ -313,7 +313,7 @@ class SLS(HDF5):
             Full dataframe for SLS Summary
         """
         wells = self.wells()
-        samples = self.samples()
+        # samples = self.samples()
 
         cols = ['color', 'well_id', 'sample', 't_onset', 't_agg_266',
                 't_agg_473']
@@ -345,8 +345,8 @@ class SLS(HDF5):
                                 't_agg_266': self.sls_summary_tagg266(well),
                                 't_agg_473': self.sls_summary_tagg473(well)}
 
-                sample_mask = pd.Series(samples).str.endswith(well)
-                well_summary['sample'] = samples[sample_mask][0]
+                # sample_mask = pd.Series(samples).str.endswith(well)
+                # well_summary['sample'] = samples[sample_mask][0]
 
                 tms = self.sls_summary_tms(well)
                 for i in range(max_tm):

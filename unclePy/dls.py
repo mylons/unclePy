@@ -669,7 +669,7 @@ class DLS(HDF5):
 
         data = {
             'well_id'           : well_ids,
-            'sample'            : self.samples(),
+            # 'sample'            : self.samples(),
             'temperature'       : self.dls_summary_temperature(),
             'z_avg_diameter'    : self.dls_summary_z_avg_diam(raw = False,
                                                               diam = True),
