@@ -60,10 +60,8 @@ class SLS(HDF5):
         Writes SLS BCM data to PostgreSQL database
     """
 
-    def __init__(self, file_path, uncle_experiment_id, well_set_id,
-                 last_capillary_used = None):
-        super().__init__(file_path, uncle_experiment_id, well_set_id,
-                         last_capillary_used)
+    def __init__(self, file_path, uncle_experiment_id, well_set_id):
+        super().__init__(file_path, uncle_experiment_id, well_set_id)
 
     # ----------------------------------------------------------------------- #
     # GENERIC DATA COLLECTION                                                 #

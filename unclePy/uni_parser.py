@@ -14,19 +14,13 @@ parser.add_argument('uncle_experiment_id',
 parser.add_argument('well_set_id',
                     help = 'Database ID for associated well set',
                     type = int)
-parser.add_argument('--last_capillary_used',
-                    help = 'Last capillary used in L plate',
-                    type = str)
 
 args = parser.parse_args()
 
 if __name__ == '__main__':
-    hdf = HDF5(args.uni_file, args.uncle_experiment_id, args.well_set_id,
-               args.last_capillary_used)
-    dls = DLS(args.uni_file, args.uncle_experiment_id, args.well_set_id,
-              args.last_capillary_used)
-    sls = SLS(args.uni_file, args.uncle_experiment_id, args.well_set_id,
-              args.last_capillary_used)
+    hdf = HDF5(args.uni_file, args.uncle_experiment_id, args.well_set_id)
+    dls = DLS(args.uni_file, args.uncle_experiment_id, args.well_set_id)
+    sls = SLS(args.uni_file, args.uncle_experiment_id, args.well_set_id)
 
     hdf.write_exp_set_info_sql()
 
