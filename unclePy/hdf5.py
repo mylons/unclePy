@@ -279,64 +279,33 @@ class HDF5:
         """
         with self.engine.connect() as con:
             query = sqlalchemy.text(
-                "SELECT layout_address, uni_capillary_address "
+                "SELECT w.layout_address, w.uni_capillary_address "
                 "FROM wells w "
                 "JOIN well_set_wells wsw "
                 "   ON wsw.well_id = w.id "
-                "JOIN well_sets ws "
-                "   ON ws.id = wsw.well_set_id "
-                "WHERE ws.id = {} "
+                "JOIN uncle_experiment_sets ues "
+                "   ON ues.well_set_id = wsw.well_set_id "
+                "WHERE ues.well_set_id = {} "
+                "AND w.uni_plate_side = '{}' "
                 "ORDER BY w.id".format(
-                    self.well_set_id
+                    self.well_set_id,
+                    self.exp_plate_side()
                 ))
             result = con.execute(query)
             result = result.mappings().all()
 
-        # There are cases were not every well in metadata is used in experiment.
-        # This first iterates through all samples actually used in experiment.
-        # Each sample is added as a list so this subsequently flattens the list.
-        # Finally, checks if the actual capillaries used align with the metadata
-        capillaries_used = [i[0].decode('utf-8').split(' ') for i in
-                            self.file['Application1']['Run1']['SampleData']]
-        if self.exp_plate_side() == 'L':
-            last_capillary_index = self.confirm_capillaries(capillaries_used)
-        else:
-            last_capillary_index = len(capillaries_used)
-        capillaries_used = \
-            [cap for caps in capillaries_used[:last_capillary_index]
-             for cap in caps]
-
-        # SQL query will return -all- wells associated with UNcleExperimentSet.
-        # Loop below will filter out wells based on plate side by looking at
-        # plate column value because plates may be loaded in different orders.
-        # Overlap of greater/less than max_plate_column is necessary for
-        # instances where last column may be split over multiple rows,
-        # e.g. well plate H5 is capillary A1.
-        plate_side_wells = []
-        for well in result:
-            if self.exp_plate_side() == 'L' and \
-                    int(well['layout_address'][1:]) <= self.max_plate_column():
-                plate_side_wells.append(well)
-            elif self.exp_plate_side() == 'R' and \
-                    int(well['layout_address'][1:]) >= self.max_plate_column():
-                plate_side_wells.append(well)
-
-        if self.exp_plate_side() == 'L':
-            wells_used =\
-                [well for well in plate_side_wells[:last_capillary_index]
-                 if well['uni_capillary_address'] in capillaries_used]
-        else:
-            wells_used = \
-                [well for well in plate_side_wells
-                 if well['uni_capillary_address'] in capillaries_used]
+            sorted_result =\
+                sorted(result,
+                       key = lambda x: (x['uni_capillary_address'][1:],
+                                        x['uni_capillary_address'][0]))
 
         if include_uni_address:
             wells = {}
-            for well in wells_used:
+            for well in sorted_result:
                 wells[well['uni_capillary_address']] = well['layout_address']
         else:
             wells = []
-            for well in wells_used:
+            for well in sorted_result:
                 wells = np.append(wells, well['layout_address'])
         return wells
 
