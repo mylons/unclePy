@@ -45,8 +45,8 @@ class HDF5:
     exp_product()
         Returns product tested in experiment
 
-    exp_plate_type()
-        Returns type of plate/screen used in experiment (pH, cond, gen)
+    exp_plate_type(return_id)
+        Returns name or ID of plate/screen used in experiment
 
     exp_generation()
         Returns generation of plate layout used in experiment
@@ -221,16 +221,23 @@ class HDF5:
         """
         return self.exp_file_name().split('-')[2]
 
-    def exp_plate_type(self):
+    def exp_plate_type(self, return_id = False):
         """
+        Parameters
+        ----------
+        return_id : bool (default = False)
+            Whether to return database IDs or names
+
         Returns
         -------
-        str
-            Plate type used in experiment
+        str (if return_id = False)
+            Name of plate type used in experiment
+        int (if return_id = True)
+            ID of plate type used in experiment
         """
         with self.engine.connect() as con:
             query = sqlalchemy.text(
-                "SELECT upt.name "
+                "SELECT upt.name, upt.id "
                 "FROM uncle_plate_types upt "
                 "JOIN uncle_experiment_sets ues "
                 "   ON upt.id = ues.uncle_plate_type_id "
@@ -240,7 +247,10 @@ class HDF5:
             result = con.execute(query)
             result = result.mappings().all()
 
-        return result[0]['name']
+        if return_id:
+            return result[0]['id']
+        else:
+            return result[0]['name']
 
     def exp_generation(self):
         """
