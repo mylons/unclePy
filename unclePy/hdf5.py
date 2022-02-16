@@ -228,9 +228,19 @@ class HDF5:
         str
             Plate type used in experiment
         """
-        plate_info = self.exp_file_name().split('-')[-1]
-        plate_type = re.search(r'\D+', plate_info).group()
-        return plate_type
+        with self.engine.connect() as con:
+            query = sqlalchemy.text(
+                "SELECT upt.name "
+                "FROM uncle_plate_types upt "
+                "JOIN uncle_experiment_sets ues "
+                "   ON upt.id = ues.uncle_plate_type_id "
+                "WHERE ues.well_set_id = {}".format(
+                    self.well_set_id
+                ))
+            result = con.execute(query)
+            result = result.mappings().all()
+
+        return result[0]['name']
 
     def exp_generation(self):
         """
