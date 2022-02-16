@@ -249,11 +249,17 @@ class HDF5:
         str
             Generation of plate layout used in experiment
         """
-        plate_info = self.exp_file_name().split('-')[-1]
-        plate_gen = re.search(r'\d+', plate_info).group()
-        assert plate_gen.isnumeric(),\
-            'Incorrect experiment generation format. Format should be: ###'
-        return plate_gen
+        with self.engine.connect() as con:
+            query = sqlalchemy.text(
+                "SELECT ues.plate_generation "
+                "FROM uncle_experiment_sets ues "
+                "WHERE ues.well_set_id = {}".format(
+                    self.well_set_id
+                ))
+            result = con.execute(query)
+            result = result.mappings().all()
+
+        return result[0]['plate_generation']
 
     def exp_plate_side(self):
         """
