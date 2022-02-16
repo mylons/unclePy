@@ -45,8 +45,8 @@ class HDF5:
     exp_product()
         Returns product tested in experiment
 
-    exp_plate_type()
-        Returns type of plate/screen used in experiment (pH, cond, gen)
+    exp_plate_type(return_id)
+        Returns name or ID of plate/screen used in experiment
 
     exp_generation()
         Returns generation of plate layout used in experiment
@@ -221,16 +221,36 @@ class HDF5:
         """
         return self.exp_file_name().split('-')[2]
 
-    def exp_plate_type(self):
+    def exp_plate_type(self, return_id = False):
         """
+        Parameters
+        ----------
+        return_id : bool (default = False)
+            Whether to return database IDs or names
+
         Returns
         -------
-        str
-            Plate type used in experiment
+        str (if return_id = False)
+            Name of plate type used in experiment
+        int (if return_id = True)
+            ID of plate type used in experiment
         """
-        plate_info = self.exp_file_name().split('-')[-1]
-        plate_type = re.search(r'\D+', plate_info).group()
-        return plate_type
+        with self.engine.connect() as con:
+            query = sqlalchemy.text(
+                "SELECT upt.name, upt.id "
+                "FROM uncle_plate_types upt "
+                "JOIN uncle_experiment_sets ues "
+                "   ON upt.id = ues.uncle_plate_type_id "
+                "WHERE ues.well_set_id = {}".format(
+                    self.well_set_id
+                ))
+            result = con.execute(query)
+            result = result.mappings().all()
+
+        if return_id:
+            return result[0]['id']
+        else:
+            return result[0]['name']
 
     def exp_generation(self):
         """
@@ -239,11 +259,17 @@ class HDF5:
         str
             Generation of plate layout used in experiment
         """
-        plate_info = self.exp_file_name().split('-')[-1]
-        plate_gen = re.search(r'\d+', plate_info).group()
-        assert plate_gen.isnumeric(),\
-            'Incorrect experiment generation format. Format should be: ###'
-        return plate_gen
+        with self.engine.connect() as con:
+            query = sqlalchemy.text(
+                "SELECT ues.plate_generation "
+                "FROM uncle_experiment_sets ues "
+                "WHERE ues.well_set_id = {}".format(
+                    self.well_set_id
+                ))
+            result = con.execute(query)
+            result = result.mappings().all()
+
+        return result[0]['plate_generation']
 
     def exp_plate_side(self):
         """
@@ -545,10 +571,12 @@ class HDF5:
             self.write_product_info_sql()
             product_id = self.get_exp_product()
 
-        exp_set_info = {'name': [self.exp_name()],
-                        'product_id': product_id,
-                        'exp_type': [self.exp_plate_type()],
-                        'plate_generation': [self.exp_generation()]}
+        exp_set_info = {
+            'name': [self.exp_name()],
+            'product_id': product_id,
+            'uncle_plate_type_id': [self.exp_plate_type(return_id = True)],
+            'plate_generation': [self.exp_generation()]
+        }
         df = pd.DataFrame(exp_set_info)
         if datetime_needed:
             df = add_datetime(df)
@@ -559,14 +587,14 @@ class HDF5:
                 "UPDATE uncle_experiment_sets SET "
                 "name = '{}', "
                 "product_id = '{}', "
-                "exp_type = '{}', "
+                "uncle_plate_type_id = '{}', "
                 "plate_generation = '{}', "
                 "created_at = '{}', "
                 "updated_at = '{}' "
                 "WHERE id = {};".format(
                     update_params['name'],
                     update_params['product_id'],
-                    update_params['exp_type'],
+                    update_params['uncle_plate_type_id'],
                     update_params['plate_generation'],
                     update_params['created_at'],
                     update_params['updated_at'],
