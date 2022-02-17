@@ -271,7 +271,7 @@ class HDF5:
             result = con.execute(query)
             result = result.mappings().all()
 
-        return result[0]['plate_generation']
+        return result[0]['uncle_plate_generation']
 
     def exp_plate_side(self):
         """
