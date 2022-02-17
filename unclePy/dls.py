@@ -326,7 +326,7 @@ class DLS(HDF5):
         -------
         np.array
             Experimental (true) values,
-            Expected (predicated) values,
+            Expected (predicted) values,
             (Optional: time points)
         """
         wells = self.wells()
@@ -344,11 +344,11 @@ class DLS(HDF5):
             time_rel = time[:len(true_values)]
 
             popt, pcov = curve_fit(func, time_rel, true_values)
-            predicated_values = func(time_rel, popt[0], popt[1])
+            predicted_values = func(time_rel, popt[0], popt[1])
             if for_plotting:
-                values.append([true_values, predicated_values, time_rel])
+                values.append([true_values, predicted_values, time_rel])
             else:
-                values.append([true_values, predicated_values])
+                values.append([true_values, predicted_values])
         return np.array(values, dtype = object)
 
     def dls_summary_residuals(self):
