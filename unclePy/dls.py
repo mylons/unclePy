@@ -326,7 +326,7 @@ class DLS(HDF5):
         -------
         np.array
             Experimental (true) values,
-            Expected (predicated) values,
+            Expected (predicted) values,
             (Optional: time points)
         """
         wells = self.wells()
@@ -343,12 +343,17 @@ class DLS(HDF5):
             true_values = corr[corr > min_of_corr]
             time_rel = time[:len(true_values)]
 
-            popt, pcov = curve_fit(func, time_rel, true_values)
-            predicated_values = func(time_rel, popt[0], popt[1])
-            if for_plotting:
-                values.append([true_values, predicated_values, time_rel])
-            else:
-                values.append([true_values, predicated_values])
+            try:
+                popt, pcov = curve_fit(func, time_rel, true_values)
+                predicted_values = func(time_rel, popt[0], popt[1])
+                if for_plotting:
+                    values.append([true_values, predicted_values, time_rel])
+                else:
+                    values.append([true_values, predicted_values])
+            except RuntimeError as e:
+                print('Error fitting and/or calculating residuals: {}'.
+                      format(e))
+                values.append([np.array([]), np.array([])])
         return np.array(values, dtype = object)
 
     def dls_summary_residuals(self):
@@ -387,8 +392,12 @@ class DLS(HDF5):
         # true_values, predicted_values
         rmse = []
         for i in true_predicted_values:
-            rmse = np.append(rmse,
-                             mean_squared_error(i[0], i[1], squared = mse))
+            try:
+                rmse = np.append(rmse,
+                                 mean_squared_error(i[0], i[1], squared = mse))
+            except ValueError as e:
+                print('Error calculating RMSE: {}'.format(e))
+                rmse = np.append(rmse, np.nan)
         return rmse
 
     def dls_summary_intensity(self):
