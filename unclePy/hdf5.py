@@ -263,9 +263,9 @@ class HDF5:
         """
         with self.engine.connect() as con:
             query = sqlalchemy.text(
-                "SELECT ues.plate_generation "
-                "FROM uncle_experiment_sets ues "
-                "WHERE ues.well_set_id = {}".format(
+                "SELECT ws.uncle_plate_generation "
+                "FROM well_sets ws "
+                "WHERE ws.id = {}".format(
                     self.well_set_id
                 ))
             result = con.execute(query)
