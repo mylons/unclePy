@@ -239,8 +239,10 @@ class HDF5:
             query = sqlalchemy.text(
                 "SELECT upt.name, upt.id "
                 "FROM uncle_plate_types upt "
+                "JOIN well_sets ws "
+                "   ON ws.uncle_plate_type_id = upt.id "
                 "JOIN uncle_experiment_sets ues "
-                "   ON upt.id = ues.uncle_plate_type_id "
+                "   ON ues.well_set_id = ws.id "
                 "WHERE ues.well_set_id = {}".format(
                     self.well_set_id
                 ))
